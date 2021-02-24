@@ -1,0 +1,125 @@
+  
+{   
+    "mnist": {
+        "from":"torchvision",
+        "input_size":[1,28,28],
+        "labels":[0,1,2,3,4,5,6,7,8,9]
+    },
+
+    "fmnist": {
+        "from":"torchvision",
+        "input_size":[1,28,28],
+        "labels":[0,1,2,3,4,5,6,7,8,9]
+    },
+
+    "sensor": {
+        "from":"download",
+        "input_size":48,
+        "labels":[1,2,3,4,5,6,7,8,9,10,11],
+        "url":"https://archive.ics.uci.edu/ml/machine-learning-databases/00325/Sensorless_drive_diagnosis.txt",
+        "processed":false,
+        "file_name":"Sensorless_drive_diagnosis.txt",
+        "test_file":null,
+        "skip_header":0,
+        "delimiter":" "
+    },
+
+    "robotarm": {
+        "from":"download",
+        "input_size":6,
+        "labels":[-1,1],
+        "url":"https://github.com/narayave/mh5_anomaly_detector/raw/master/data/rbfsvm_train_30.csv",
+        "processed":false,
+        "file_name":"rbfsvm_train_30.csv",
+        "test_file":null,
+        "skip_header":0,
+        "delimiter":","
+    },
+
+    "gearbox": {
+        "from":"download",
+        "input_size":4,
+        "labels":[0,1],
+        "url":"https://openei.org/datasets/dataset/0e0780f8-c8d8-4336-83de-ad8a6f48c418/resource/affa53da-cae6-42f2-b898-ad018ff91641/download/gearboxdata.zip",
+        "processed":false,
+        "file_name":"gearboxdata.zip",
+        "test_file":null
+    },
+
+    "steel": {
+        "from":"kaggle",
+        "input_size":27,
+        "labels": [0,1,2,3,4,5,6],
+        "folder_name":"faulty_steel/",
+        "url":"https://www.kaggle.com/uciml/faulty-steel-plates",
+        "processed":true,
+        "file_name":"faults.csv",
+        "test_file":null
+    },
+
+    "cnc_mf": {
+        "from":"kaggle",
+        "input_size":58,
+        "labels":[0,1],
+        "folder_name":"tool-wear-detection-in-cnc-mill/",
+        "url":"https://www.kaggle.com/shasun/tool-wear-detection-in-cnc-mill/",
+        "processed":true,
+        "file_name":"experiment_mf.csv",
+        "test_file":null
+    },
+
+    "cnc_pvi": {
+        "from":"kaggle",
+        "input_size":58,
+        "labels":[0,1],
+        "folder_name":"tool-wear-detection-in-cnc-mill/",
+        "url":"https://www.kaggle.com/shasun/tool-wear-detection-in-cnc-mill/",
+        "processed":true,
+        "file_name":"experiment_pvi.csv",
+        "test_file":null
+    },
+
+    "eo": {
+        "from":"kaggle",
+        "input_size":20,
+        "labels":[0,1],
+        "folder_name":"highstoragesystem-data-for-energy-optimization/",
+        "url":"https://www.kaggle.com/inIT-OWL/high-storage-system-data-for-energy-optimization",
+        "processed":true,
+        "file_name":"HRSS.csv",
+        "test_file":null
+    },
+
+    "nasa": {
+        "from":"kaggle",
+        "input_size":33,
+        "labels":[0,1],
+        "folder_name":"nasa-asteroids-classification/",
+        "url":null,
+        "processed":true,
+        "file_name":"nasa.csv",
+        "test_file":null
+    },
+
+    "otto": {
+        "from":"kaggle",
+        "input_size":93,
+        "labels":[0,1,2,3,4,5,6,7,8],
+        "folder_name":"otto-group-product-classification-challenge/",
+        "url":null,
+        "processed":true,
+        "file_name":"train.csv",
+        "test_file":"test.csv"
+    },
+
+    "hsr_objectdrop": {
+        "from":"youngjae",
+        "input_size" : 1,
+        "labels":[0,1],
+        "folder_name":"hsr_objectdrop/",
+        "url":null,
+        "processed":true,
+        "file_name":"data_sum.csv",
+        "test_file": null
+    }
+}
