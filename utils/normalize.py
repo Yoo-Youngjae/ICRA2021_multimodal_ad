@@ -105,7 +105,7 @@ class Rotater():
 class Truncater(Rotater):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Truncater, self).__init__(*args, **kwargs)
 
     def run(self, x, trunc, gpu_id=-1, max_size=20000):
         if trunc <= 0:

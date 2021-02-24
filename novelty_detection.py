@@ -86,6 +86,7 @@ class NoveltyDetecter():
             valid_diff_on_layers,
             test_diff_on_layers,
             _test_y,
+            self.config,
             gpu_id=self.config.gpu_id,
             start_layer_index=self.config.start_layer_index,
             end_layer_index=self.config.n_layers + 1 - self.config.end_layer_index,
@@ -194,6 +195,8 @@ def get_config():
     p.add_argument('--saved_result', type=str,
                    default="1_26/All_sec")
     p.add_argument('--object_select_mode', action='store_true', default=False)
+    p.add_argument('--train_diffs', type=str,
+                   default='datasets/All_train_diffs.pt')
 
     config = p.parse_args()
 
@@ -217,12 +220,12 @@ def main(config):
     dset_managers, train_loaders, valid_loaders, test_loaders = [], [], [], []
     df_test = pd.DataFrame(
         [{'base_auroc': 0, 'sap_auroc': 0, 'nap_auroc': 0, 'base_f1score': 0, 'sap_f1score': 0, 'nap_f1score': 0}])
-    for i in range(8):
+    for i in range(config.n_epochs):
         if config.file_name == 'data_sum_free' or config.file_name == 'data_sum_motion':
             csv_num = 0  # i%8
         else:
             csv_num = i % 8
-        dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, 0)
+        dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, csv_num)
         train_history, valid_history, test_history, model = detecter.train(model,
                                                                     dset_manager,
                                                                     train_loader,
@@ -245,30 +248,15 @@ def main(config):
         )
 
     torch.save(model.state_dict(), config.saved_name)
-    # dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, 5)
-    # train_history, valid_history, test_history, models = detecter.train(models,
-    #                                                                    dset_manager,
-    #                                                                    train_loader,
-    #                                                                    valid_loader,
-    #                                                                    test_loader,
-    #                                                                    test_every_epoch=not config.use_rapp
-    #                                                                    )
-    # (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr) = detecter.test(
-    #     models,
-    #     dset_manager,
-    #     train_loader,
-    #     valid_loader,
-    #     test_loader,
-    #     use_rapp=config.use_rapp,
-    # )
+
     # testModel
     df_test = pd.DataFrame([{'base_auroc': 0, 'sap_auroc': 0, 'nap_auroc': 0, 'base_f1score':0, 'sap_f1score':0, 'nap_f1score': 0}])
-    for i in range(8): # 30
+    for i in range(config.n_epochs): # 30
         if config.file_name == 'data_sum_free' or config.file_name == 'data_sum_motion':
             csv_num = 0  # i%8
         else:
             csv_num = i % 8
-        # dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, csv_num)
+
 
         dset_manager, train_loader, valid_loader, test_loader = dset_managers[csv_num], train_loaders[csv_num], valid_loaders[csv_num], test_loaders[csv_num]
 

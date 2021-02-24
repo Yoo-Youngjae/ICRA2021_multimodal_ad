@@ -1,10 +1,7 @@
 import pyaudio
-import numpy as np
 import rospy
 from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import String
-import atexit
-import time
 
 rospy.init_node('mic_receiver')
 pub_mic = rospy.Publisher('/snu/microphone_send', String, queue_size=10)

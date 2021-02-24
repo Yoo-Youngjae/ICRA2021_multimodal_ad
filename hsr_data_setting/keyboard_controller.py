@@ -11,7 +11,6 @@ import time
 from datetime import datetime
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
-from std_msgs.msg import Float64MultiArray
 
 from tmc_control_msgs.msg import (
     GripperApplyEffortAction,
@@ -27,28 +26,11 @@ from sensor_msgs.msg import CompressedImage
 from cv_bridge import CvBridge
 
 import cv2
-import atexit
-
-# for mic_controller
-import numpy as np
 
 # for base_controller
 import control_msgs.msg
 import controller_manager_msgs.srv
-import geometry_msgs.msg
-from geometry_msgs.msg import Pose, PoseStamped, PoseWithCovarianceStamped, Quaternion, Twist
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-import trajectory_msgs.msg
 from hsrb_interface import Robot
-from hsrb_interface import geometry
-
-from tf import TransformListener, Transformer, transformations
-from tf.transformations import quaternion_from_euler
-from std_srvs.srv import Empty
-
-
-# for miccontroller
-import pyaudio
 import wave
 
 _CONNECTION_TIMEOUT = 10.0

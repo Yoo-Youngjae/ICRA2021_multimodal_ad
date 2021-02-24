@@ -182,6 +182,7 @@ def get_d_norm_loss(train_diffs,
                     valid_diffs,
                     test_diffs,
                     test_label,
+                    config,
                     start_layer_index=0,
                     end_layer_index=None,
                     gpu_id=-1,
@@ -199,7 +200,7 @@ def get_d_norm_loss(train_diffs,
         end_layer_index = start_layer_index + 1
 
     train_diffs = torch.cat([torch.from_numpy(i) for i in train_diffs[start_layer_index:end_layer_index]], dim=-1).numpy()
-    torch.save(train_diffs, '/data_ssd/hsr_dropobject/senario/train_diffs/All_train_diffs_motion.pt')
+    torch.save(train_diffs, config.train_diffs)
     valid_diffs = torch.cat([torch.from_numpy(i) for i in valid_diffs[start_layer_index:end_layer_index]], dim=-1).numpy()
 
     start_data = time.time()
