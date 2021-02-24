@@ -249,7 +249,7 @@ def get_config():
 
     p.add_argument('--n_epochs', type=int, default=30)
     p.add_argument('--batch_size', type=int, default=4)
-    p.add_argument('--model', type=str, default='ae')
+    p.add_argument('--models', type=str, default='ae')
     p.add_argument('--LiDAR_version', type=int, default=1)
     p.add_argument('--LiDAR_delete', action='store_true', default=True)
     p.add_argument('--forcetorque_delete', action='store_true',
@@ -260,14 +260,13 @@ def get_config():
 
     p.add_argument('--file_name', type=str, default="data_sum")
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
-    p.add_argument('--saved_name', type=str, default="/data_ssd/hsr_dropobject/savedModel/10_21/All.pt")
+    p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
     p.add_argument('--saved_data', type=str,
                    default="All")
-    p.add_argument('--saved_result', type=str,
-                   default="10_27/All")
+
     p.add_argument('--object_select_mode', action='store_true', default=False)
     p.add_argument('--object_type', type=str, default="book") # cracker doll metalcup eraser cookies book plate bottle
-    p.add_argument('--train_diffs', type=str, default='/data_ssd/hsr_dropobject/senario/train_diffs/All_train_diffs.pt')  # cracker doll metalcup eraser cookies book plate bottle
+    p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')  # cracker doll metalcup eraser cookies book plate bottle
 
     config = p.parse_args()
 
@@ -277,12 +276,13 @@ def main(config):
     from model_builder import get_model
     config.input_size = get_input_size(config)
     model = get_model(config)
+    print(model)
     model.load_state_dict(torch.load(config.saved_name))
     detecter = NoveltyDetecter(config)
 
 
 
-    dir_name = '/data_ssd/hsr_dropobject/senario/caltime_test.csv'
+    dir_name = 'datasets/caltime_test.csv'
     df = pd.read_csv(dir_name)
     config.batch_size = len(df)
     dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, dir_name)

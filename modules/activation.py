@@ -20,7 +20,7 @@ import torch.nn as nn
 class Activation(nn.Module):
 
     def __init__(self, act):
-        super().__init__()
+        super(Activation, self).__init__()
 
         if act == 'sigmoid':
             self.act = nn.Sigmoid()

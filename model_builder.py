@@ -64,9 +64,9 @@ def ae_wrapper(config):
 
 
 def get_model(config):
-    if config.model == 'ae':
+    if config.models == 'ae':
         model = ae_wrapper(config)
-    elif config.model == 'vae':
+    elif config.models == 'vae':
         from models.variational_auto_encoder import VariationalAutoEncoder as VAE
         if type(config.input_size) != int:
             input_size = 1
@@ -80,7 +80,7 @@ def get_model(config):
             n_layers=config.n_layers,
             k=10
         )
-    elif config.model == 'aae':
+    elif config.models == 'aae':
         from models.adversarial_auto_encoder import AdversarialAutoEncoder as AAE
         if 'dropout' in vars(config).keys():
             dropout = config.dropout

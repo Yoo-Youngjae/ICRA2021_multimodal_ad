@@ -163,7 +163,7 @@ def get_config():
 
     p.add_argument('--novelty_ratio', type=float, default=.0)
 
-    p.add_argument('--btl_size', type=int, default=32) # 100, 10
+    p.add_argument('--btl_size', type=int, default=100) # 100, 10
     p.add_argument('--n_layers', type=int, default=5) # 5, 3
 
     p.add_argument('--use_rapp', action='store_true', default=True)
@@ -177,7 +177,7 @@ def get_config():
 
     p.add_argument('--n_epochs', type=int, default=30)
     p.add_argument('--batch_size', type=int, default=7000)
-    p.add_argument('--model', type=str, default='ae')
+    p.add_argument('--models', type=str, default='ae')
     p.add_argument('--LiDAR_version', type=int, default=1)
     p.add_argument('--LiDAR_delete', action='store_true', default=True)
     p.add_argument('--forcetorque_delete', action='store_true',
@@ -188,7 +188,7 @@ def get_config():
 
     p.add_argument('--file_name', type=str, default="data_sum")
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
-    p.add_argument('--saved_name', type=str, default="/data_ssd/hsr_dropobject/savedModel/1_26/All_32.pt")
+    p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
     p.add_argument('--saved_data', type=str,
                    default="All")
     p.add_argument('--saved_result', type=str,
@@ -246,7 +246,7 @@ def main(config):
 
     torch.save(model.state_dict(), config.saved_name)
     # dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, 5)
-    # train_history, valid_history, test_history, model = detecter.train(model,
+    # train_history, valid_history, test_history, models = detecter.train(models,
     #                                                                    dset_manager,
     #                                                                    train_loader,
     #                                                                    valid_loader,
@@ -254,7 +254,7 @@ def main(config):
     #                                                                    test_every_epoch=not config.use_rapp
     #                                                                    )
     # (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr) = detecter.test(
-    #     model,
+    #     models,
     #     dset_manager,
     #     train_loader,
     #     valid_loader,

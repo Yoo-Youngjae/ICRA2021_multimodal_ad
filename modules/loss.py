@@ -22,7 +22,7 @@ class Loss(nn.Module):
     def __init__(self, loss, weight=None, reduction='sum'):
         self.reduction = reduction
 
-        super().__init__()
+        super(Loss, self).__init__()
 
         if loss == 'bce':
             self.loss = nn.BCELoss(weight=weight, reduction=reduction)

@@ -95,7 +95,7 @@ def get_config():
     p.add_argument('--target_class', type=str, default=1)
 
     p.add_argument('--novelty_ratio', type=float, default=.0)
-    p.add_argument('--model', type=str, default='ae')
+    p.add_argument('--models', type=str, default='ae')
     p.add_argument('--btl_size', type=int, default=20)
     p.add_argument('--n_layers', type=int, default=10)
 

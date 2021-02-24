@@ -31,7 +31,7 @@ class FCModule(nn.Module):
                  last_act=None
                  ):
 
-        super().__init__()
+        super(FCModule, self).__init__()
 
         self.layer_list = []
 

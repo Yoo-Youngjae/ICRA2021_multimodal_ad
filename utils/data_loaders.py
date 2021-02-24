@@ -19,7 +19,7 @@
 import os
 import torch
 import numpy as np
-from collections.abc import Iterable
+from collections import Iterable
 from torch.utils.data.sampler import SubsetRandomSampler, Sampler
 from torch.utils.data import DataLoader, Dataset
 import pandas as pd
@@ -93,7 +93,7 @@ def get_loaders(config, csv_num, use_full_class=False):
     with open('datasets/data_config.json', 'r') as f:
         data_config = json.load(f)
     if config.data not in data_config.keys():
-        raise ValueError(f'no dataset config for {config.data}')
+        raise ValueError('no dataset config for'+ config.data)
     data_config = data_config[config.data]
 
     # split labels 
@@ -614,7 +614,7 @@ class TabularDataset(Dataset):
         r_out = range_out[1] - range_out[0]
         r_in = range_in[1] - range_in[0]
         v = (r_out * (v - range_in[0]) / r_in) + range_out[0]
-        v = np.nan_to_num(v, nan=0.0)
+        v = np.nan_to_num(v) # , nan=0.0
         return v
 
     def __len__(self):
@@ -680,10 +680,6 @@ class TabularDatasetManager:
         root='/data_ssd/hsr_dropobject/data',
         full_test=None
     ):
-
-        from datasets.data_preprocess import get_preprocess
-        dataset_name = dataset_name.lower()
-        # process with kaggle hsr_objectdrop
 
 
         load_dir = root

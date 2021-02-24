@@ -28,7 +28,7 @@ class FCLayer(nn.Module):
                  act='relu',
                  bn=False,
                  dropout_p=0):
-        super().__init__()
+        super(FCLayer, self).__init__()
         self.layer = nn.Linear(input_size, output_size, bias)
         self.bn = nn.BatchNorm1d(output_size) if bn else None
         self.dropout = nn.Dropout(dropout_p) if dropout_p else None
