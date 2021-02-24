@@ -15,7 +15,7 @@
 #  strictly forbidden unless prior written permission is obtained
 #  from MakinaRocks Co., Ltd.
 import torch
-from models import AbstractModel
+from models.abstract_model import AbstractModel
 
 
 class AutoEncoder(AbstractModel):
@@ -56,7 +56,7 @@ class AutoEncoder(AbstractModel):
 
     @staticmethod
     def step(engine, mini_batch):
-        # set model to train
+        # set models to train
         engine.model.train()
         engine.optimizer.zero_grad()
 
@@ -66,7 +66,7 @@ class AutoEncoder(AbstractModel):
             x = x.cuda(engine.config.gpu_id)
         x = x.view(x.size(0), -1)
 
-        # get loss value from model
+        # get loss value from models
         loss = engine.model.get_loss_value(x, x)
 
         # update parameters with loss

@@ -27,7 +27,7 @@ class AbstractModel(nn.Module):
             if not (model_and_opt is None or isinstance(model_and_opt, Iterable)):
                 raise Exception("model_and_opt arg should be None or iterable objects")
 
-        # For saving best model's optimizers
+        # For saving best models's optimizers
         self.optimizer_list = []
 
     def forward(self):
