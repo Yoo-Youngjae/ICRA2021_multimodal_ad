@@ -51,7 +51,7 @@ class NoveltyDetecter():
 
     def test(self,
              model,
-             test_loader,
+             _test_x,
              config
              ):
         from reconstruction_aggregation import get_diffs
@@ -59,18 +59,7 @@ class NoveltyDetecter():
         model.eval()
 
         with torch.no_grad():
-            #tensor list to tensor
-            _test_x, _test_y = self.get_transformed_data(test_loader)
-
-            # _test_x = _test_x.view(171,1,2048)[0]
-            # _test_y = _test_y[0]
-
-            _test_y = np.where(np.isin(_test_y, [self.config.target_class]), True, False)
-
-            show_mode = False
-            if show_mode:
-                self.show_detect_slip(_test_x, _test_y, model)
-
+            # _test_x = _test_x.view(171,1,2048)[0]k
             test_diff_on_layers = get_diffs(_test_x, model)
 
         score = self.get_d_norm_loss(

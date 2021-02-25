@@ -305,10 +305,10 @@ if __name__ == '__main__':
     depth_q = vision_controller.depth_queue
     mic_q = mic_controller.queue
 
-    test_loader = get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q)
+    fusion_representation = get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q)
     score = detecter.test(
         model,
-        test_loader,
+        fusion_representation,
         config
     )
     print(score)
