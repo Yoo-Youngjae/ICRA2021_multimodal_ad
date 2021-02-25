@@ -64,42 +64,7 @@ def ae_wrapper(config):
 
 
 def get_model(config):
-    if config.models == 'ae':
-        model = ae_wrapper(config)
-    elif config.models == 'vae':
-        from models.variational_auto_encoder import VariationalAutoEncoder as VAE
-        if type(config.input_size) != int:
-            input_size = 1
-            for i in config.input_size:
-                input_size *= i
-        else:
-            input_size = config.input_size
-        model = VAE(
-            input_size=input_size,
-            btl_size=config.btl_size,
-            n_layers=config.n_layers,
-            k=10
-        )
-    elif config.models == 'aae':
-        from models.adversarial_auto_encoder import AdversarialAutoEncoder as AAE
-        if 'dropout' in vars(config).keys():
-            dropout = config.dropout
-        else:
-            dropout = 0.2
-        if type(config.input_size) != int:
-            input_size = 1
-            for i in config.input_size:
-                input_size *= i
-        else:
-            input_size = config.input_size
-        model = AAE(
-                    input_size=input_size,
-                    btl_size=config.btl_size,
-                    n_layers=config.n_layers,
-                )
-    else:
-        raise NotImplementedError
-
+    model = ae_wrapper(config)
     if config.gpu_id >= 0:
         model = model.cuda(config.gpu_id)
 

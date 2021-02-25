@@ -31,42 +31,19 @@ import sklearn
 import time
 
 def get_input_size(config):
-    import json
-    with open('datasets/data_config.json', 'r') as f:
-        data_config = json.load(f)
-
-    data_config = data_config.get(config.data, None)
-    if data_config is None:
-        raise NotImplementedError
-    else:
-        if config.sensor == 'All':
-            val = 1728
-            # if config.LiDAR_delete:
-            #     val -= 2048
-            # if config.forcetorque_delete:
-            #     val -= 64
-            return val
-        elif config.sensor == 'hand_camera':
-            return 1024
-        elif config.sensor == 'force_torque':
-            return 64 # 64
-        elif config.sensor == 'head_depth':
-            return 512
-        elif config.sensor == 'LiDAR':
-            return 2048
-        elif config.sensor == 'mic':
-            return 128
-
-def get_class_list(config):
-    import json
-    with open('datasets/data_config.json', 'r') as f:
-        data_config = json.load(f)
-
-    data_config = data_config.get(config.data, None)
-    if data_config is None:
-        raise NotImplementedError
-    else:
-        return [0,1] # data_config['labels']
+    if config.sensor == 'All':
+        val = 1728
+        return val
+    elif config.sensor == 'hand_camera':
+        return 1024
+    elif config.sensor == 'force_torque':
+        return 64 # 64
+    elif config.sensor == 'head_depth':
+        return 512
+    elif config.sensor == 'LiDAR':
+        return 2048
+    elif config.sensor == 'mic':
+        return 128
 
 def get_balance(seen_index_list, unseen_index_list, novelty_ratio=.5):
     if novelty_ratio <= 0.:
@@ -189,24 +166,6 @@ class SequentialIndicesSampler(Sampler):
 
     def __len__(self):
         return len(self.indices)
-
-
-class ConcatWindowDataset(Dataset):
-    def __init__(self, file_dir, target_class, window_size=1):
-        self.file_list = os.listdir(file_dir)
-        self.data = []        
-        for name in self.file_list:
-            temp = np.genfromtxt(file_dir+'/'+name)
-            for i in range(len(temp)-window_size):
-                self.data += [temp[i:i+window_size].reshape(-1)]
-        self.data = np.array(self.data)
-        self.targets = np.array([target_class] * len(self.data)).reshape(-1,1)
-    
-    def __len__(self):
-        return len(self.targets)
-        
-    def __getitem__(self, idx):        
-        return torch.Tensor(self.data[idx]), torch.Tensor(self.targets[idx])
 
 # writen by chungyeon_lee
 class HSR_Net(nn.Module):
