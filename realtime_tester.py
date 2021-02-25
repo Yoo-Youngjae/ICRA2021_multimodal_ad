@@ -298,7 +298,7 @@ if __name__ == '__main__':
     print(model)
     model.load_state_dict(torch.load(config.saved_name))
 
-
+    rospy.sleep(3)
     detecter = NoveltyDetecter(config)
     force_q = force_sensor_capture.queue
     hand_q = vision_controller.hand_queue

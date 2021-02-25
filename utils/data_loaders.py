@@ -733,13 +733,11 @@ class Multisensory_module(nn.Module):
         return out
 
 def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
-    t = torch.tensor(force_q)
+    t = torch.tensor(force_q, dtype=torch.float32)
+    r = torch.tensor(hand_q, dtype=torch.float32).view(-1, 1, 3, 32, 32)
+    d = torch.tensor(depth_q, dtype=torch.float32).view(-1, 1, 1, 32, 32)
+    m = torch.tensor(mic_q, dtype=torch.float32).view(-1, 1, 1, 13)
 
-    r = torch.tensor(hand_q).view(-1, 1, 3, 32, 32)
-    d = torch.tensor(depth_q).view(-1, 1, 1, 32, 32)
-    m = mic_q.to_numpy()
-    m = torch.from_numpy(m.astype(np.float32))
-    m = m.view(-1, 1, 1, 13)
     multisensory_module = Multisensory_module(config).cuda(config.gpu_id)
 
     fusion_representation = multisensory_module(r.cuda(config.gpu_id),
