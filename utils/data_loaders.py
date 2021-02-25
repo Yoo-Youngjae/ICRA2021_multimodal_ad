@@ -29,6 +29,9 @@ from torch import nn
 from torch.nn import functional as F
 import sklearn
 import time
+import librosa
+import decimal
+
 
 def get_input_size(config):
     if config.sensor == 'All':
@@ -732,6 +735,32 @@ class Multisensory_module(nn.Module):
             out = torch.cat((out, result), 0)
         return out
 
+def save_mfcc_from_wav(mic_q, length, window_size=0.1, stride=0.1):
+    # load wav
+    y = np.frombuffer(b''.join(mic_q), dtype=np.float32)
+    sr = 44100 # rate
+    # check if more than 'length' sec
+    if len(y) < sr * length:
+        print('length of wav file must be over ' + str(length) + ' seconds')
+
+    # cut wav to exactly 'length' seconds
+    length = round(length, 1)
+    slice_idx = round(sr * length)
+    lenth_y = len(y)
+    y = y[lenth_y-slice_idx:]
+
+    # apply MFCC
+    nfft = int(round(sr * window_size))
+    hop = int(round(sr * stride))
+    S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128, n_fft=nfft, hop_length=hop)
+    log_S = librosa.power_to_db(S, ref=np.max)
+    mfcc = librosa.feature.mfcc(S=log_S, n_mfcc=13)  # n_mfcc => number of features
+
+    # reform [n_mfcc x length*(1/stride)] -> [length*(1/stride) x n_mfcc]
+    mfcc = mfcc.T
+
+    return mfcc
+
 def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
     t = torch.tensor(force_q, dtype=torch.float32)
     r = torch.tensor(hand_q, dtype=torch.float32).view(-1, 1, 3, 32, 32)
@@ -749,6 +778,7 @@ def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
 
 
 def get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q):
+    mic_q = save_mfcc_from_wav(mic_q, length=decimal.Decimal(config.batch_size/10), window_size=0.1, stride=0.1)
     fusion_representation = HsrDataset(config, force_q, hand_q, depth_q, mic_q)
     return fusion_representation
 

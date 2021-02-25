@@ -14,11 +14,7 @@ from cv_bridge import CvBridge
 
 import wave
 from collections import deque
-import decimal
 
-import librosa.display
-import librosa
-import numpy as np
 import torch
 from utils.data_loaders import get_input_size
 import cv2
@@ -185,42 +181,7 @@ class MicController(object):
     def _mic_callback(self, data):
         self.frames.append(data.data)
 
-    def save_mfcc_from_wav(self, source_path, save_path, length=decimal.Decimal(0.0), window_size=0.1, stride=0.1,
-                           start_time=0):
-        # load wav
-        y, sr = librosa.load(source_path)
 
-        # check if more than 'length' sec
-        if len(y) < sr * length:
-            print('length of wav file must be over ' + str(length) + ' seconds')
-
-        # cut wav to exactly 'length' seconds
-        length = round(length, 1)
-        slice_idx = round(sr * length)
-        y = y[:slice_idx]
-
-        # apply MFCC
-        nfft = int(round(sr * window_size))
-        hop = int(round(sr * stride))
-        S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128, n_fft=nfft, hop_length=hop)
-        log_S = librosa.power_to_db(S, ref=np.max)
-        mfcc = librosa.feature.mfcc(S=log_S, n_mfcc=13)  # n_mfcc => number of features
-
-        # reform [n_mfcc x length*(1/stride)] -> [length*(1/stride) x n_mfcc]
-        mfcc = mfcc.T
-        column_name = []
-        # save results
-
-        np.savetxt(save_path, mfcc, delimiter=',')
-
-        for i in range(13):
-            if i < 10:
-                column_name.append('mfcc0' + str(i))
-            else:
-                column_name.append('mfcc' + str(i))
-        df = pd.DataFrame(mfcc)
-        df.columns = column_name
-        return df
 
     def save(self, save_path):
         tempdf = pd.DataFrame([{'endtime': datetime.now()}])
