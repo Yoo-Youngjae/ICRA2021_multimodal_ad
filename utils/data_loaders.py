@@ -735,12 +735,8 @@ class Multisensory_module(nn.Module):
 def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
     t = torch.tensor(force_q)
 
-    r = hand_q.reshape(-1, 1, 3, 32, 32)
-    r = torch.from_numpy(r.astype(np.float32))
-
-    d = depth_q.reshape(-1, 1, 1, 32, 32)
-    d = torch.from_numpy(d.astype(np.float32))
-
+    r = torch.tensor(hand_q).view(-1, 1, 3, 32, 32)
+    d = torch.tensor(depth_q).view(-1, 1, 1, 32, 32)
     m = mic_q.to_numpy()
     m = torch.from_numpy(m.astype(np.float32))
     m = m.view(-1, 1, 1, 13)
