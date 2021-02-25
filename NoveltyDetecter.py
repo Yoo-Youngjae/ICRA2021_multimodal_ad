@@ -59,7 +59,7 @@ class NoveltyDetecter():
         model.eval()
 
         with torch.no_grad():
-
+            #tensor list to tensor
             _test_x, _test_y = self.get_transformed_data(test_loader)
 
             # _test_x = _test_x.view(171,1,2048)[0]

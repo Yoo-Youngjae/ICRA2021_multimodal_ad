@@ -118,12 +118,12 @@ class VisionController(object):
 
     def _depth_callback(self, data):
         self.depth_img = self.bridge.imgmsg_to_cv2(data,"32FC1")
-        self.depth_img = cv2.resize(self.depth_img, dsize=(32, 24), interpolation=cv2.INTER_AREA)
+        self.depth_img = cv2.resize(self.depth_img, dsize=(32, 32), interpolation=cv2.INTER_AREA)
         self.depth_queue.append(self.depth_img)
 
     def _hand_callback(self, data):
         self.hand_img = self.bridge.imgmsg_to_cv2(data,"bgr8") #bgr8
-        self.hand_img = cv2.resize(self.hand_img, dsize=(32, 24), interpolation=cv2.INTER_AREA)
+        self.hand_img = cv2.resize(self.hand_img, dsize=(32, 32), interpolation=cv2.INTER_AREA)
         self.hand_queue.append(self.hand_img)
 
 
@@ -261,17 +261,15 @@ def get_config():
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
 
-    p.add_argument('--n_epochs', type=int, default=30)
-    p.add_argument('--batch_size', type=int, default=4)
+    p.add_argument('--batch_size', type=int, default=36)
 
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
     p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
-    p.add_argument('--saved_data', type=str,
-                   default="All")
+    p.add_argument('--saved_data', type=str, default="All")
 
     p.add_argument('--object_select_mode', action='store_true', default=False)
     p.add_argument('--object_type', type=str, default="book") # cracker doll metalcup eraser cookies book plate bottle
-    p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')  # cracker doll metalcup eraser cookies book plate bottle
+    p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')
 
     config = p.parse_args()
 
@@ -280,10 +278,14 @@ def get_config():
 if __name__ == '__main__':
     from model_builder import get_model
     from NoveltyDetecter import NoveltyDetecter
+    from utils.data_loaders import get_realtime_dataloader
     config = get_config()
+
     rospy.init_node('hsr_realtime_anomaly_detection')
     now = time.time()
-    maxlen = 36
+
+    maxlen = config.batch_size
+
     # for data stream
     force_sensor_capture = ForceSensorCapture(now, maxlen)
     vision_controller = VisionController(now, maxlen)
@@ -298,12 +300,15 @@ if __name__ == '__main__':
 
 
     detecter = NoveltyDetecter(config)
-    force_sensor_capture.queue
-    vision_controller.hand_queue
-    vision_controller.depth_queue
-    mic_controller.queue
+    force_q = force_sensor_capture.queue
+    hand_q = vision_controller.hand_queue
+    depth_q = vision_controller.depth_queue
+    mic_q = mic_controller.queue
+
+    test_loader = get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q)
     score = detecter.test(
         model,
         test_loader,
         config
     )
+    print(score)

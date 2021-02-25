@@ -193,8 +193,7 @@ class HSR_Net(nn.Module):
         self.conv1m = nn.Conv1d(1, 12, kernel_size=2, stride=1)
         self.conv2m = nn.Conv1d(12, 8, kernel_size=2, stride=2, padding=2)
         self.unimodal = unimodal
-        self.LiDAR_delete = config.LiDAR_delete
-        self.forcetorque_delete = config.forcetorque_delete
+
 
 
     def forward(self, r, d, l, t, m):
@@ -243,19 +242,11 @@ class HSR_Net(nn.Module):
 
             # Concatenate
             if not self.unimodal:
-                if not self.LiDAR_delete:
-                    if not self.forcetorque_delete:
-                        result = torch.cat((rr, dd, ll, tt, mm), dim=1)
-                    else:
-                        result = torch.cat((rr, dd, ll, mm), dim=1)
-                else:
-                    if not self.forcetorque_delete:
-                        result = torch.cat((rr, dd, tt, mm), dim=1)
-                    else:
-                        result = torch.cat((rr, dd, mm), dim=1)
-            out = torch.cat((out, result), 0)
+                result = torch.cat((rr, dd, tt, mm), dim=1)
 
+            out = torch.cat((out, result), 0)
         return out
+
 
 
 class TabularDataset(Dataset):
@@ -267,8 +258,7 @@ class TabularDataset(Dataset):
         LiDAR = False
         mic = False
         unimodal = True
-        LiDAR_delete = config.LiDAR_delete
-        forcetorque_delete = config.forcetorque_delete
+
 
         if config.sensor == 'All':
             All = True
@@ -287,261 +277,201 @@ class TabularDataset(Dataset):
 
         file_name = config.saved_data
         data_sum_file = config.file_name
-        ptfile_name = '/data_ssd/hsr_dropobject/savedData/'+file_name + str(csv_num) + '.pt'
-        ptfile_label_name = '/data_ssd/hsr_dropobject/savedData/'+ file_name +'label' + str(csv_num) + '.pt'
         csv_data_dir = '/data_ssd/hsr_dropobject/'+data_sum_file+str(csv_num)+'.csv'
 
 
-        if config.save_mode and os.path.exists(ptfile_name):
-            data = torch.load(ptfile_name)
 
-            label_series = torch.load(ptfile_label_name)
-
-        else:
-            if full_test is not None:
-                df_datasum = pd.read_csv(full_test)
-            elif config.object_select_mode:
-                df_datasum = pd.read_csv('/data_ssd/hsr_dropobject/data_sum0.csv')
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum1.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum2.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum3.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum4.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum5.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum6.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum7.csv'), ignore_index=True)
-                #
-                df_objectlist = pd.read_csv('/data_ssd/hsr_dropobject/objectsplit.csv')
-                print(config.object_type)
-                df_objectlist = df_objectlist[config.object_type]           # book only mode !!! # cracker doll metalcup eraser cookies book plate bottle
-                object_dir_list = df_objectlist.to_list()
-                df_datasum = df_datasum[df_datasum['data_dir'].isin(object_dir_list)]
-                df_datasum.index = [i for i in range(len(df_datasum.index))]
-                df_datasum = df_datasum.loc[:config.batch_size - 1]
-
-                df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
-            elif config.all_random_mode:
-                if os.path.exists('/data_ssd/hsr_dropobject/datasum_total.pt'):
-                    df_datasum = torch.load('/data_ssd/hsr_dropobject/datasum_total.pt')
-                else:
-                    df_datasum = pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'0.csv')
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'1.csv'), ignore_index=True)
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'2.csv'), ignore_index=True)
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'3.csv'), ignore_index=True)
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'4.csv'), ignore_index=True)
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'5.csv'), ignore_index=True)
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'6.csv'), ignore_index=True)
-                    df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'7.csv'), ignore_index=True)
-                    torch.save(df_datasum, '/data_ssd/hsr_dropobject/datasum_total.pt')
-                df_datasum = sklearn.utils.shuffle(df_datasum)
-                print('before_slicing',df_datasum.shape)
-                df_datasum.index = [i for i in range(len(df_datasum.index))]
-                df_datasum = df_datasum.loc[:config.batch_size - 1]
-                print('after_slicing',df_datasum.shape)
-            else:
-                df_datasum = pd.read_csv(csv_data_dir)
-                df_datasum = df_datasum.loc[:config.batch_size - 1]
-                df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
-                print('after_slicing',df_datasum.shape)
-
+        if full_test is not None:
+            df_datasum = pd.read_csv(full_test)
+        elif config.object_select_mode:
+            df_datasum = pd.read_csv('/data_ssd/hsr_dropobject/data_sum0.csv')
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum1.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum2.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum3.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum4.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum5.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum6.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum7.csv'), ignore_index=True)
+            #
+            df_objectlist = pd.read_csv('/data_ssd/hsr_dropobject/objectsplit.csv')
+            print(config.object_type)
+            df_objectlist = df_objectlist[config.object_type]           # book only mode !!! # cracker doll metalcup eraser cookies book plate bottle
+            object_dir_list = df_objectlist.to_list()
+            df_datasum = df_datasum[df_datasum['data_dir'].isin(object_dir_list)]
             df_datasum.index = [i for i in range(len(df_datasum.index))]
-            df_datasum = df_datasum.loc[0:config.batch_size -1]
+            df_datasum = df_datasum.loc[:config.batch_size - 1]
 
-            depth_series = df_datasum['cur_depth_id']
-            hand_series = df_datasum['cur_hand_id']
-            hand_weight_series = df_datasum['cur_hand_weight']
-            data_dir = df_datasum['data_dir']
-            label_series = df_datasum['label']
+            df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
+        elif config.all_random_mode:
+            if os.path.exists('/data_ssd/hsr_dropobject/datasum_total.pt'):
+                df_datasum = torch.load('/data_ssd/hsr_dropobject/datasum_total.pt')
+            else:
+                df_datasum = pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'0.csv')
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'1.csv'), ignore_index=True)
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'2.csv'), ignore_index=True)
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'3.csv'), ignore_index=True)
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'4.csv'), ignore_index=True)
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'5.csv'), ignore_index=True)
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'6.csv'), ignore_index=True)
+                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'7.csv'), ignore_index=True)
+                torch.save(df_datasum, '/data_ssd/hsr_dropobject/datasum_total.pt')
+            df_datasum = sklearn.utils.shuffle(df_datasum)
+            print('before_slicing',df_datasum.shape)
+            df_datasum.index = [i for i in range(len(df_datasum.index))]
+            df_datasum = df_datasum.loc[:config.batch_size - 1]
+            print('after_slicing',df_datasum.shape)
+        else:
+            df_datasum = pd.read_csv(csv_data_dir)
+            df_datasum = df_datasum.loc[:config.batch_size - 1]
+            df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
+            print('after_slicing',df_datasum.shape)
 
-            ## essential erase
-            data = df_datasum.drop(columns=['data_dir'])
-            data = data.drop(columns=['now_timegap'])
-            data = data.drop(columns=['label'])
-            data = data.drop(columns=['id'])
-            data = data.loc[:, ~data.columns.str.match('Unnamed')]
+        df_datasum.index = [i for i in range(len(df_datasum.index))]
+        df_datasum = df_datasum.loc[0:config.batch_size -1]
 
+        depth_series = df_datasum['cur_depth_id']
+        hand_series = df_datasum['cur_hand_id']
+        hand_weight_series = df_datasum['cur_hand_weight']
+        data_dir = df_datasum['data_dir']
+        label_series = df_datasum['label']
 
-
-            if (LiDAR or All) and not LiDAR_delete:
-                LiDAR_df = data.drop(columns=['cur_depth_id'])
-                LiDAR_df = LiDAR_df.drop(columns=['cur_hand_id'])
-                LiDAR_df = LiDAR_df.drop(columns=['cur_hand_weight'])
-                # remove mmfc
-                for i in range(13):
-                    if i <10:
-                        LiDAR_df = LiDAR_df.drop(columns='mfcc0'+str(i))
-                    else:
-                        LiDAR_df = LiDAR_df.drop(columns='mfcc'+str(i))
-
-                Truncate_mode = True
-
-                if Truncate_mode:
-                    for i in range(963):
-                        if i < 10:
-                            name = 'LiDAR00' + str(i)
-                        elif i < 100:
-                            name = 'LiDAR0' + str(i)
-                        else:
-                            name = 'LiDAR' + str(i)
-                        LiDAR_df.loc[LiDAR_df[name] > 4.0, name] = 4.0  # over 4m, it truncate to 4.0
-
-
-
-                if LiDAR:
-                    data = LiDAR_df
-            elif All and LiDAR_delete:
-                for i in range(963):
-                    if i < 10:
-                        data = data.drop(columns='LiDAR00' + str(i))
-                    elif i< 100:
-                        data = data.drop(columns='LiDAR0' + str(i))
-                    else:
-                        data = data.drop(columns='LiDAR' + str(i))
-            if All and forcetorque_delete:
-                data = data.drop(columns='cur_hand_weight')
-            elif hand_camera:
-                data = hand_series.to_frame() # pd.concat([,label_series], axis=1)
-            elif force_torque:
-                data = hand_weight_series.to_frame() #pd.concat([, label_series], axis=1)
-            elif head_depth:
-                data = depth_series.to_frame() #pd.concat([, label_series], axis=1)
-
-            if mic or All:
-                mic_df = None
-                for i in range(13):
-                    if i == 0:
-                        mic_df = data['mfcc00']
-                    elif i <10:
-                        mic_df = pd.concat([mic_df, data['mfcc0' + str(i)]], axis=1)
-                    else:
-                        mic_df = pd.concat([mic_df, data['mfcc' + str(i)]], axis=1)
-                if mic:
-                    data = mic_df
+        ## essential erase
+        data = df_datasum.drop(columns=['data_dir'])
+        data = data.drop(columns=['now_timegap'])
+        data = data.drop(columns=['label'])
+        data = data.drop(columns=['id'])
+        data = data.loc[:, ~data.columns.str.match('Unnamed')]
 
 
 
-            base_depth_arr = np.array([])
-            base_hand_arr = np.array([])
-            firstRow = True
-            if hand_camera or head_depth or All:
-                for idx, data_dir_str in tqdm(zip(data.index,data_dir)):
-                    nowdf = data.loc[idx]
 
-                    if hand_camera or All:
-                        hand_dir = '/data_ssd/hsr_dropobject/data/' + data_dir_str + '/data/img/hand/' + str(
-                            int(nowdf['cur_hand_id'])) + '.png'
-                        hand_im = Image.open(hand_dir).resize((32, 24))
-                        hand_arr = np.array(hand_im)
-                        # print(hand_arr.shape)
-                        hand_arr = hand_arr.reshape(1, -1)
-                    if head_depth or All:
-                        depth_dir = '/data_ssd/hsr_dropobject/data/' + data_dir_str + '/data/img/d/' + str(
-                            int(nowdf['cur_depth_id'])) + '.png'
-                        depth_im = Image.open(depth_dir).resize((32, 24))
-                        depth_arr = np.array(depth_im).reshape(1, -1)
-                    else:
-                        pass
+        if All:
+            for i in range(963):
+                if i < 10:
+                    data = data.drop(columns='LiDAR00' + str(i))
+                elif i< 100:
+                    data = data.drop(columns='LiDAR0' + str(i))
+                else:
+                    data = data.drop(columns='LiDAR' + str(i))
+        elif hand_camera:
+            data = hand_series.to_frame() # pd.concat([,label_series], axis=1)
+        elif force_torque:
+            data = hand_weight_series.to_frame() #pd.concat([, label_series], axis=1)
+        elif head_depth:
+            data = depth_series.to_frame() #pd.concat([, label_series], axis=1)
 
-                    #reshape for 1d
-                    if firstRow:
-                        firstRow = False
-                        if hand_camera or All:
-                            base_hand_arr = hand_arr
-                        if head_depth or All:
-                            base_depth_arr = depth_arr
-                    else:
-                        if hand_camera or All:
-                            base_hand_arr = np.concatenate((base_hand_arr, hand_arr), axis=0)
-                        if head_depth or All:
-                            base_depth_arr = np.concatenate((base_depth_arr, depth_arr), axis=0)
-
-            #todo delete
-            multisensory_start_time = time.time()
-            if hand_camera or All:
-                r = self.norm_vec_np(base_hand_arr)
-                r = torch.from_numpy(r.astype(np.float32))
-                r = r.view(-1, 1, 3, 24, 32).squeeze()
-                r = F.interpolate(r, 32).view(-1,1,3,32,32)
-                r = r.cuda(config.gpu_id)
-                print(r.shape)
-            if head_depth or All:
-                d = self.norm_vec_np(base_depth_arr)
-                d = torch.from_numpy(d.astype(np.float32))
-                d = d.view(-1, 1, 24, 32)
-                d = F.interpolate(d, 32).view(-1, 1, 1, 32, 32)
-                d = d.cuda(config.gpu_id)
-                print(d.shape)
-            if (LiDAR or All) and not LiDAR_delete:
-                ########### 1d version
-                LiDAR_df = LiDAR_df.to_numpy()
-                l = self.norm_vec_np(LiDAR_df)
-                l = torch.from_numpy(l.astype(np.float32))
-                l = l.view(-1, 1, 1, 963)
-                l = l.cuda(config.gpu_id)
-                print(l.shape)
-            if (force_torque or All) and not forcetorque_delete:
-                t = self.norm_vec_np(hand_weight_series.to_numpy())
-                t = torch.from_numpy(t.astype(np.float32))
-                t = t.view(-1, 1)
-                t = t.cuda(config.gpu_id)
-                print(t.shape)
-            if mic or All:
-                mic_df = mic_df.to_numpy()
-                m = self.norm_vec_np(mic_df)
-                m = torch.from_numpy(m.astype(np.float32))
-                m = m.view(-1, 1, 1, 13)
-                m = m.cuda(config.gpu_id)
-                print(m.shape)
-
-            if All and not LiDAR_delete and not forcetorque_delete:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(r,d,l,t,m)
-                print(data.shape)
-                # data = data.view(-1, 8, 8, 57)
-                data = data.view(-1, 3776)
-            elif All and not LiDAR_delete and forcetorque_delete:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(r, d, l, None, m)
-                print(data.shape)
-                data = data.view(-1, 3712)
-            elif All and LiDAR_delete and not forcetorque_delete:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(r, d, None, t, m)
-                print(data.shape)
-                data = data.view(-1, 1728)
-            elif All and LiDAR_delete and forcetorque_delete:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(r, d, None, None, m)
-                print('LiDAR_delete and forcetorque_delete:',data.shape)
-                data = data.view(-1, 1664)
-            if hand_camera:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(r, None, None, None, None)
-                print(data.shape)
-                data = data.view(-1, 1024)
-            if force_torque:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(None, None, None, t, None)
-                print(data.shape)
-                data = data.view(-1, 64) # 64 128
-            if head_depth:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(None, d, None, None, None)
-                print(data.shape)
-                data = data.view(-1, 512)
-            if LiDAR:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(None, None, l, None, None)
-                print(data.shape)
-                data = data.view(-1, 2048)
+        if mic or All:
+            mic_df = None
+            for i in range(13):
+                if i == 0:
+                    mic_df = data['mfcc00']
+                elif i <10:
+                    mic_df = pd.concat([mic_df, data['mfcc0' + str(i)]], axis=1)
+                else:
+                    mic_df = pd.concat([mic_df, data['mfcc' + str(i)]], axis=1)
             if mic:
-                hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-                data = hsr_net(None, None, None, None, m)
-                print(data.shape)
-                data = data.view(-1, 128)
+                data = mic_df
 
-            if config.save_mode and not os.path.exists(ptfile_name):
-                torch.save(data, ptfile_name)
-                torch.save(label_series, ptfile_label_name)
+
+
+        base_depth_arr = np.array([])
+        base_hand_arr = np.array([])
+        firstRow = True
+        if hand_camera or head_depth or All:
+            for idx, data_dir_str in tqdm(zip(data.index,data_dir)):
+                nowdf = data.loc[idx]
+
+                if hand_camera or All:
+                    hand_dir = '/data_ssd/hsr_dropobject/data/' + data_dir_str + '/data/img/hand/' + str(
+                        int(nowdf['cur_hand_id'])) + '.png'
+                    hand_im = Image.open(hand_dir).resize((32, 24))
+                    hand_arr = np.array(hand_im)
+                    # print(hand_arr.shape)
+                    hand_arr = hand_arr.reshape(1, -1)
+                if head_depth or All:
+                    depth_dir = '/data_ssd/hsr_dropobject/data/' + data_dir_str + '/data/img/d/' + str(
+                        int(nowdf['cur_depth_id'])) + '.png'
+                    depth_im = Image.open(depth_dir).resize((32, 24))
+                    depth_arr = np.array(depth_im).reshape(1, -1)
+                else:
+                    pass
+
+                #reshape for 1d
+                if firstRow:
+                    firstRow = False
+                    if hand_camera or All:
+                        base_hand_arr = hand_arr
+                    if head_depth or All:
+                        base_depth_arr = depth_arr
+                else:
+                    if hand_camera or All:
+                        base_hand_arr = np.concatenate((base_hand_arr, hand_arr), axis=0)
+                    if head_depth or All:
+                        base_depth_arr = np.concatenate((base_depth_arr, depth_arr), axis=0)
+
+        #todo delete
+        multisensory_start_time = time.time()
+        if hand_camera or All:
+            r = self.norm_vec_np(base_hand_arr)
+            r = torch.from_numpy(r.astype(np.float32))
+            r = r.view(-1, 1, 3, 24, 32).squeeze()
+            r = F.interpolate(r, 32).view(-1,1,3,32,32)
+            r = r.cuda(config.gpu_id)
+            print(r.shape)
+        if head_depth or All:
+            d = self.norm_vec_np(base_depth_arr)
+            d = torch.from_numpy(d.astype(np.float32))
+            d = d.view(-1, 1, 24, 32)
+            d = F.interpolate(d, 32).view(-1, 1, 1, 32, 32)
+            d = d.cuda(config.gpu_id)
+            print(d.shape)
+
+        if (force_torque or All) :
+            t = self.norm_vec_np(hand_weight_series.to_numpy())
+            t = torch.from_numpy(t.astype(np.float32))
+            t = t.view(-1, 1)
+            t = t.cuda(config.gpu_id)
+            print(t.shape)
+        if mic or All:
+            mic_df = mic_df.to_numpy()
+            m = self.norm_vec_np(mic_df)
+            m = torch.from_numpy(m.astype(np.float32))
+            m = m.view(-1, 1, 1, 13)
+            m = m.cuda(config.gpu_id)
+            print(m.shape)
+
+
+        if All:
+            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
+            data = hsr_net(r, d, None, t, m)
+            print(data.shape)
+            data = data.view(-1, 1728)
+        if hand_camera:
+            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
+            data = hsr_net(r, None, None, None, None)
+            print(data.shape)
+            data = data.view(-1, 1024)
+        if force_torque:
+            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
+            data = hsr_net(None, None, None, t, None)
+            print(data.shape)
+            data = data.view(-1, 64) # 64 128
+        if head_depth:
+            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
+            data = hsr_net(None, d, None, None, None)
+            print(data.shape)
+            data = data.view(-1, 512)
+        if LiDAR:
+            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
+            data = hsr_net(None, None, l, None, None)
+            print(data.shape)
+            data = data.view(-1, 2048)
+        if mic:
+            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
+            data = hsr_net(None, None, None, None, m)
+            print(data.shape)
+            data = data.view(-1, 128)
+
 
         # todo deleted
         print('multisensory_time',time.time() - multisensory_start_time)
@@ -580,29 +510,18 @@ class TabularDataset(Dataset):
         return len(self.targets)
         
     def __getitem__(self, idx):
-        # x = self.data[idx].reshape(1, -1)
-        # y = self.targets[idx].reshape(1, -1)
-        # if self.transform is not None:
-        #     x = self.transform.transform(x)
-        # if self.target_transform is not None:
-        #     y = self.target_transform.transform(y)
-        
-        # return torch.Tensor(x.squeeze()), torch.Tensor(y.squeeze())
         return self.data[idx], self.targets[idx]
 
 class TabularDatasetManager:
     
     def __init__(self, dataset_name, config, csv_num,
         transform=None, target_transform=None,
-        test_transform=None, test_target_transform=None,
         shuffle=False, data_size=0, full_test=None):
 
         data_list = []
         targets_list = []
 
-        self.train_dataset = self._get_dataset(
-            dataset_name, is_train=True, config=config, csv_num=csv_num, full_test=full_test
-        )
+        self.train_dataset = self._get_dataset(config=config, csv_num=csv_num, full_test=full_test)
         if self.train_dataset:
             data, targets = self.train_dataset.data, self.train_dataset.targets
             data_list.append(data)
@@ -632,8 +551,6 @@ class TabularDatasetManager:
         
     def _get_dataset(
         self,
-        dataset_name,
-        is_train,
         config,
         csv_num,
         root='/data_ssd/hsr_dropobject/data',
@@ -738,3 +655,106 @@ class TabularDatasetManager:
                     num_workers=0,
                 )
             ]
+
+
+class Multisensory_module(nn.Module):
+    def __init__(self, config, unimodal=False):
+        super(Multisensory_module, self).__init__()
+        self.batch_size = config.batch_size
+        self.config = config
+        self.unimodal = unimodal
+
+        self.conv1r = nn.Conv2d( 3, 16, kernel_size=2, stride=2)
+        self.conv2r = nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1)
+        self.conv3r = nn.Conv2d(16, 16, kernel_size=2, stride=2)
+
+        self.conv1d = nn.Conv2d( 1,  8, kernel_size=2, stride=2)
+        self.conv2d = nn.Conv2d( 8,  8, kernel_size=3, stride=1, padding=1)
+        self.conv3d = nn.Conv2d( 8,  8, kernel_size=2, stride=2)
+
+
+        # 1d version
+        self.conv1l = nn.Conv1d( 1,  8, kernel_size=18, stride=9, padding=9)
+        self.conv2l = nn.Conv1d( 8, 16, kernel_size=2, stride=2)
+        self.conv3l = nn.Conv1d(16, 32, kernel_size=2, stride=2)
+        self.conv4l = nn.Conv1d(32, 16, kernel_size=3, stride=2, padding=3)
+        self.conv5l = nn.Conv1d(16, 32, kernel_size=2, stride=2)
+
+
+        self.conv1m = nn.Conv1d(1, 12, kernel_size=2, stride=1)
+        self.conv2m = nn.Conv1d(12, 8, kernel_size=2, stride=2, padding=2)
+
+
+    def forward(self, r, d, t, m):
+        out = torch.Tensor().cuda(self.config.gpu_id)
+        for i in range(self.batch_size):
+            if r is not None:
+                rr = F.relu(self.conv1r(r[i]))
+                rr = F.relu(self.conv2r(rr))
+                rr = F.relu(self.conv3r(rr))
+                if self.unimodal:
+                    result = rr
+            if d is not None:
+                dd = F.relu(self.conv1d(d[i]))
+                dd = F.relu(self.conv2d(dd))
+                dd = F.relu(self.conv3d(dd))
+                if self.unimodal:
+                    result = dd
+
+            # if l is not None:
+            #     # 1d version
+            #     ll = F.relu(self.conv1l(l[i]))
+            #     ll = F.relu(self.conv2l(ll))
+            #     ll = F.relu(self.conv3l(ll))
+            #     ll = F.relu(self.conv4l(ll))
+            #     ll = F.relu(self.conv5l(ll))
+            #     ll = ll.view(-1, 32, 8, 1).repeat(1, 1, 1, 8)
+            #     if self.unimodal:
+            #         result = ll
+
+            if t is not None:
+                # Broadcast
+                tt = t[i].repeat(1, 1, 8, 8) # (1, 2, 8, 8)
+                if self.unimodal:
+                    result = tt
+
+            if m is not None:
+                mm = F.relu(self.conv1l(m[i]))
+                mm = F.relu(self.conv2l(mm))
+                mm = mm.view(-1, 2, 8, 1).repeat(1, 1, 1, 8)
+                if self.unimodal:
+                    result = mm
+
+            # Concatenate
+            if not self.unimodal:
+                result = torch.cat((rr, dd, tt, mm), dim=1)
+
+            out = torch.cat((out, result), 0)
+        return out
+
+def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
+    t = torch.tensor(force_q)
+
+    r = hand_q.reshape(-1, 1, 3, 32, 32)
+    r = torch.from_numpy(r.astype(np.float32))
+
+    d = depth_q.reshape(-1, 1, 1, 32, 32)
+    d = torch.from_numpy(d.astype(np.float32))
+
+    m = mic_q.to_numpy()
+    m = torch.from_numpy(m.astype(np.float32))
+    m = m.view(-1, 1, 1, 13)
+    multisensory_module = Multisensory_module(config).cuda(config.gpu_id)
+
+    fusion_representation = multisensory_module(r.cuda(config.gpu_id),
+                                                d.cuda(config.gpu_id),
+                                                t.cuda(config.gpu_id),
+                                                m.cuda(config.gpu_id))
+
+    return fusion_representation
+
+
+def get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q):
+    fusion_representation = HsrDataset(config, force_q, hand_q, depth_q, mic_q)
+    return fusion_representation
+

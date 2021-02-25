@@ -176,13 +176,10 @@ def get_config():
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
 
-    p.add_argument('--n_epochs', type=int, default=30)
+    p.add_argument('--n_epochs', type=int, default=1)
     p.add_argument('--batch_size', type=int, default=7000)
     p.add_argument('--models', type=str, default='ae')
-    p.add_argument('--LiDAR_version', type=int, default=1)
-    p.add_argument('--LiDAR_delete', action='store_true', default=True)
-    p.add_argument('--forcetorque_delete', action='store_true',
-                   default=False)  # if i use force_torque to sensor, it must be False
+
     p.add_argument('--save_mode', action='store_true', default=False)
     p.add_argument('--all_random_mode', action='store_true', default=False)
 
