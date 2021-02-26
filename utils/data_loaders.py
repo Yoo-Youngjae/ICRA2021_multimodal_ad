@@ -272,8 +272,7 @@ class TabularDataset(Dataset):
             df_objectlist = df_objectlist[config.object_type]           # book only mode !!! # cracker doll metalcup eraser cookies book plate bottle
             object_dir_list = df_objectlist.to_list()
             df_datasum = df_datasum[df_datasum['data_dir'].isin(object_dir_list)]
-            df_datasum.index = [i for i in range(len(df_datasum.index))]
-            df_datasum = df_datasum.loc[:config.slicing_size - 1]
+
             df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
         else:
             df_datasum = pd.read_csv(config.data_folder_name+data_sum_file+'0.csv')
@@ -286,8 +285,9 @@ class TabularDataset(Dataset):
             df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'7.csv'), ignore_index=True)
 
             df_datasum = sklearn.utils.shuffle(df_datasum)
-            df_datasum.index = [i for i in range(len(df_datasum.index))]
-            df_datasum = df_datasum.loc[:config.slicing_size - 1]
+
+        df_datasum.index = [i for i in range(len(df_datasum.index))]
+        df_datasum = df_datasum.loc[:config.slicing_size - 1]
 
         depth_series = df_datasum['cur_depth_id']
         hand_series = df_datasum['cur_hand_id']
@@ -431,6 +431,7 @@ class TabularDataset(Dataset):
         self.data = data
         print(self.data.shape)
         self.targets = torch.from_numpy(label_series.to_numpy().astype(np.float32))
+        print(self.targets.shape)
 
 
     def norm_vec(self,v, range_in=None, range_out=None):

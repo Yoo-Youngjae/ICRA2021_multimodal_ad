@@ -1,20 +1,3 @@
-#
-#  MAKINAROCKS CONFIDENTIAL
-#  ________________________
-#
-#  [2017] - [2020] MakinaRocks Co., Ltd.
-#  All Rights Reserved.
-#
-#  NOTICE:  All information contained herein is, and remains
-#  the property of MakinaRocks Co., Ltd. and its suppliers, if any.
-#  The intellectual and technical concepts contained herein are
-#  proprietary to MakinaRocks Co., Ltd. and its suppliers and may be
-#  covered by U.S. and Foreign Patents, patents in process, and
-#  are protected by trade secret or copyright law. Dissemination
-#  of this information or reproduction of this material is
-#  strictly forbidden unless prior written permission is obtained
-#  from MakinaRocks Co., Ltd.
-
 
 #  this code is for hsr slip detection
 import torch
@@ -225,8 +208,11 @@ def get_config():
 
     p = argparse.ArgumentParser()
 
-    p.add_argument('--gpu_id', type=int, default=0)
+    p.add_argument('--n_epochs', type=int, default=20)
 
+    p.add_argument('--batch_size', type=int, default=7000)
+    p.add_argument('--slicing_size', type=int, default=56000)
+    p.add_argument('--gpu_id', type=int, default=0)
     p.add_argument('--verbose', type=int, default=2)
 
     p.add_argument('--data', type=str, default='hsr_objectdrop')
@@ -234,41 +220,31 @@ def get_config():
     p.add_argument('--target_class', type=str, default=1)
 
     p.add_argument('--novelty_ratio', type=float, default=.0)
+    p.add_argument('--btl_size', type=int, default=100) # 100, 10
+    p.add_argument('--n_layers', type=int, default=5) # 5, 3
 
-    p.add_argument('--btl_size', type=int, default=100) # 100
-    p.add_argument('--n_layers', type=int, default=5) # 5
-
-    p.add_argument('--use_rapp', action='store_true', default=True)
     p.add_argument('--start_layer_index', type=int, default=0)
     p.add_argument('--end_layer_index', type=int, default=-1)
-    p.add_argument('--n_trials', type=int, default=1)
     p.add_argument('--from', type=str, default="youngjae")
 
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
-
-    p.add_argument('--n_epochs', type=int, default=30)
-    p.add_argument('--batch_size', type=int, default=4)
     p.add_argument('--models', type=str, default='ae')
-    p.add_argument('--LiDAR_version', type=int, default=1)
-    p.add_argument('--LiDAR_delete', action='store_true', default=True)
-    p.add_argument('--forcetorque_delete', action='store_true',
-                   default=False)  # if i use force_torque to sensor, it must be False
     p.add_argument('--save_mode', action='store_true', default=False)
-    p.add_argument('--all_random_mode', action='store_true', default=False)
 
-
-    p.add_argument('--file_name', type=str, default="data_sum")
+    p.add_argument('--data_folder_name', type=str, default="/data_ssd/hsr_dropobject/")
+    p.add_argument('--file_name', type=str, default="data_sum") # data_sum_motion, data_sum_free
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
     p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
-    p.add_argument('--saved_data', type=str,
-                   default="All")
-
+    p.add_argument('--saved_data', type=str, default="All")
+    p.add_argument('--saved_result', type=str, default="1_26/All_sec")
     p.add_argument('--object_select_mode', action='store_true', default=False)
-    p.add_argument('--object_type', type=str, default="book") # cracker doll metalcup eraser cookies book plate bottle
-    p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')  # cracker doll metalcup eraser cookies book plate bottle
+    p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')
 
     config = p.parse_args()
+
+    if config.file_name is not 'data_sum':
+        config.slicing_size = 7000
 
     return config
 

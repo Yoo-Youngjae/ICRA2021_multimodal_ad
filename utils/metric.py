@@ -139,6 +139,7 @@ def get_recon_loss(valid_diff, test_diff, test_label, f1_quantiles=[.99]):
                             f1_quantiles=f1_quantiles,
                             )
     precision, recall = get_confusion_matrix(loss, test_label, threshold)
+    print('base threshold',threshold)
     return loss, loss_auc_roc, loss_auc_prc, loss_f1s, precision, recall
 
 def get_d_loss(train_diffs,
@@ -175,6 +176,7 @@ def get_d_loss(train_diffs,
                               test_label,
                               f1_quantiles=f1_quantiles
                              )
+    print()
     precision, recall = get_confusion_matrix(d_loss, test_label, threshold)
     return d_loss, d_loss_auc_roc, d_loss_auc_prc, d_loss_f1s, precision, recall
 
@@ -231,5 +233,6 @@ def get_d_norm_loss(train_diffs,
                              f1_quantiles=f1_quantiles
                             )
     precision, recall = get_confusion_matrix(score, test_label, threshold)
+    print('nap threshold', threshold)
 
     return score, auc_roc, auc_prc, f1_scores, precision, recall
