@@ -282,7 +282,7 @@ if __name__ == '__main__':
     rospy.sleep(10)
     detecter = NoveltyDetecter(config)
 
-    size = 100
+    size = 300
     x_vec = np.linspace(0, 1, size + 1)[0:-1]
     y_vec = np.zeros(len(x_vec))
     line1 = []

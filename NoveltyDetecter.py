@@ -9,46 +9,6 @@ class NoveltyDetecter():
     def __init__(self, config):
         self.config = config
 
-    def show_detect_slip(self, test_x, test_y, model): # test_x length = 30
-        model.eval()
-
-        if isinstance(test_x, np.ndarray):
-            test_x = torch.tensor(test_x)
-        test_x = test_x.view(-1,1,self.config.input_size)
-        loss_fn = torch.nn.MSELoss(reduction="sum")
-        x_plot = []
-        y_plot = []
-
-        true_plot = []
-        false_plot = []
-
-        label_plot = []
-        for i, (x, y) in enumerate(zip(test_x, test_y)):
-            model.eval()
-            x = x.to(next(model.parameters()).device).float()
-            x_hat = model(x)
-            loss = loss_fn(x_hat, x)
-            print(i, loss.item(), y)
-            x_plot.append(i)
-            y_plot.append(loss.item())
-            if bool(y) == True: # is np true
-                label_plot.append(1)
-                true_plot.append(x)
-            else:
-                label_plot.append(0)
-                false_plot.append(x)
-
-        plt.subplot(2,1,1)
-        plt.plot(x_plot, y_plot)
-        plt.title('RaPP Loss')
-
-        plt.subplot(2, 1, 2)
-        plt.plot(x_plot, label_plot)
-        plt.title('Label')
-        plt.tight_layout()
-        plt.show()
-
-
     def test(self,
              model,
              _test_x,
