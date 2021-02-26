@@ -735,9 +735,10 @@ class Multisensory_module(nn.Module):
             out = torch.cat((out, result), 0)
         return out
 
-def save_mfcc_from_wav(mic_q, length, window_size=0.1, stride=0.1):
+def save_mfcc_from_wav(mic_q, config, length, window_size=0.1, stride=0.1):
     # load wav
-    y = np.frombuffer(b''.join(mic_q), dtype=np.float32)
+
+    y = np.frombuffer(b''.join(mic_q),dtype=np.int16)
     sr = 44100 # rate
     # check if more than 'length' sec
     if len(y) < sr * length:
@@ -745,19 +746,20 @@ def save_mfcc_from_wav(mic_q, length, window_size=0.1, stride=0.1):
 
     # cut wav to exactly 'length' seconds
     length = round(length, 1)
-    slice_idx = round(sr * length)
-    lenth_y = len(y)
-    y = y[lenth_y-slice_idx:]
+    slice_idx = int(round(sr * length))
+    # y = y[:slice_idx]
 
     # apply MFCC
     nfft = int(round(sr * window_size))
     hop = int(round(sr * stride))
-    S = librosa.feature.melspectrogram(y, sr=sr, n_mels=128, n_fft=nfft, hop_length=hop)
+    S = librosa.feature.melspectrogram(y.astype('float32'), sr=sr, n_mels=128, n_fft=nfft, hop_length=hop)
     log_S = librosa.power_to_db(S, ref=np.max)
     mfcc = librosa.feature.mfcc(S=log_S, n_mfcc=13)  # n_mfcc => number of features
 
     # reform [n_mfcc x length*(1/stride)] -> [length*(1/stride) x n_mfcc]
     mfcc = mfcc.T
+    mfcc = mfcc[:config.batch_size,:]
+    print('mfcc.shape', mfcc.shape)
 
     return mfcc
 
@@ -769,16 +771,19 @@ def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
 
     multisensory_module = Multisensory_module(config).cuda(config.gpu_id)
 
+
     fusion_representation = multisensory_module(r.cuda(config.gpu_id),
                                                 d.cuda(config.gpu_id),
                                                 t.cuda(config.gpu_id),
                                                 m.cuda(config.gpu_id))
 
-    return fusion_representation
+
+
+    return fusion_representation.view(config.batch_size, -1)
 
 
 def get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q):
-    mic_q = save_mfcc_from_wav(mic_q, length=decimal.Decimal(config.batch_size/10), window_size=0.1, stride=0.1)
+    mic_q = save_mfcc_from_wav(mic_q, config, length=decimal.Decimal(config.batch_size/10), window_size=0.1, stride=0.1)
     fusion_representation = HsrDataset(config, force_q, hand_q, depth_q, mic_q)
     return fusion_representation
 

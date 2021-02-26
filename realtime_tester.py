@@ -165,10 +165,9 @@ class MicController(object):
         self.CHANNELS = 2
         self.RATE = 44100
         self.frames = []
-        self.mic_df = pd.DataFrame([{'starttime': datetime.now()}])
         self._mic_sub = rospy.Subscriber(mic_topic, String, self._mic_callback)
         self.starttime = now
-        self.queue = deque(maxlen=maxlen)
+        self.queue = deque(maxlen=maxlen*3)
 
 
         # Wait for connection
@@ -180,7 +179,7 @@ class MicController(object):
 
     def _mic_callback(self, data):
         self.frames.append(data.data)
-
+        self.queue.append(data.data)
 
 
     def save(self, save_path):
@@ -259,7 +258,7 @@ if __name__ == '__main__':
     print(model)
     model.load_state_dict(torch.load(config.saved_name))
 
-    rospy.sleep(3)
+    rospy.sleep(10)
     detecter = NoveltyDetecter(config)
     force_q = force_sensor_capture.queue
     hand_q = vision_controller.hand_queue
