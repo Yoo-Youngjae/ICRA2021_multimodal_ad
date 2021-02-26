@@ -12,7 +12,8 @@ class NoveltyDetecter():
     def test(self,
              model,
              _test_x,
-             config
+             config,
+             nap=True
              ):
         from reconstruction_aggregation import get_diffs
 
@@ -22,14 +23,17 @@ class NoveltyDetecter():
             # _test_x = _test_x.view(171,1,2048)[0]k
             test_diff_on_layers = get_diffs(_test_x, model)
 
-        score = self.get_d_norm_loss(
-            test_diff_on_layers,
-            config,
-            gpu_id=self.config.gpu_id,
-            start_layer_index=self.config.start_layer_index,
-            end_layer_index=self.config.n_layers + 1 - self.config.end_layer_index,
-            norm_type=2
-        )
+        if nap:
+            score = self.get_d_norm_loss(
+                test_diff_on_layers,
+                config,
+                gpu_id=self.config.gpu_id,
+                start_layer_index=self.config.start_layer_index,
+                end_layer_index=self.config.n_layers + 1 - self.config.end_layer_index,
+                norm_type=2
+            )
+        else:
+            score = (test_diff_on_layers[0]**2).mean(axis=1)
 
         return score
 

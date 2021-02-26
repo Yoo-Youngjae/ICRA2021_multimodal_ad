@@ -119,14 +119,15 @@ class VisionController(object):
 
 
     def _depth_callback(self, data):
-        self.depth_img = self.bridge.imgmsg_to_cv2(data,"32FC1")
-        self.depth_img = cv2.resize(self.depth_img, dsize=(32, 32), interpolation=cv2.INTER_AREA)
-        self.depth_queue.append(self.depth_img)
+        depth_img = self.bridge.imgmsg_to_cv2(data,"32FC1")
+        depth_img = cv2.resize(depth_img, dsize=(32, 32), interpolation=cv2.INTER_AREA)
+        self.depth_queue.append(depth_img)
 
     def _hand_callback(self, data):
-        self.hand_img = self.bridge.imgmsg_to_cv2(data,"bgr8") #bgr8
-        self.hand_img = cv2.resize(self.hand_img, dsize=(32, 32), interpolation=cv2.INTER_AREA)
-        self.hand_queue.append(self.hand_img)
+        hand_img = self.bridge.imgmsg_to_cv2(data,"bgr8") #bgr8
+        hand_img = cv2.resize(hand_img, dsize=(32, 32), interpolation=cv2.INTER_AREA)
+        hand_img = cv2.rotate(hand_img, cv2.ROTATE_90_CLOCKWISE)
+        self.hand_queue.append(hand_img)
 
 
     def _rgb_callback(self, data):
@@ -297,7 +298,8 @@ if __name__ == '__main__':
         score = detecter.test(
             model,
             fusion_representation,
-            config
+            config,
+            nap=False
         )
         new_val = np.array(score)
         y_vec[-config.batch_size:] = new_val

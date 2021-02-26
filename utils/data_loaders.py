@@ -763,21 +763,33 @@ def save_mfcc_from_wav(mic_q, config, length, window_size=0.1, stride=0.1):
 
     return mfcc
 
+def norm_vec(v, range_in=None, range_out=None):
+    if range_out is None:
+        range_out = [-1, 1]
+    if range_in is None:
+        range_in = [torch.min(v), torch.max(v)]
+
+    r_out = range_out[1] - range_out[0]
+    r_in = range_in[1] - range_in[0]
+    v = (r_out * (v - range_in[0]) / r_in) + range_out[0]
+    return v
+
 def HsrDataset(config, force_q, hand_q, depth_q, mic_q):
     t = torch.tensor(force_q, dtype=torch.float32)
     r = torch.tensor(hand_q, dtype=torch.float32).view(-1, 1, 3, 32, 32)
     d = torch.tensor(depth_q, dtype=torch.float32).view(-1, 1, 1, 32, 32)
     m = torch.tensor(mic_q, dtype=torch.float32).view(-1, 1, 1, 13)
+    r = norm_vec(r, range_in=[0, 255])
+    d = norm_vec(d, range_in=[0, 255])
+    m = norm_vec(m)
+    t = norm_vec(t, range_in=[0, 400])
 
     multisensory_module = Multisensory_module(config).cuda(config.gpu_id)
-
 
     fusion_representation = multisensory_module(r.cuda(config.gpu_id),
                                                 d.cuda(config.gpu_id),
                                                 t.cuda(config.gpu_id),
                                                 m.cuda(config.gpu_id))
-
-
 
     return fusion_representation.view(config.batch_size, -1)
 
