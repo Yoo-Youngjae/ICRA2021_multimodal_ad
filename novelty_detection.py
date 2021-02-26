@@ -1,24 +1,3 @@
-#
-#  MAKINAROCKS CONFIDENTIAL
-#  ________________________
-#
-#  [2017] - [2020] MakinaRocks Co., Ltd.
-#  All Rights Reserved.
-#
-#  NOTICE:  All information contained herein is, and remains
-#  the property of MakinaRocks Co., Ltd. and its suppliers, if any.
-#  The intellectual and technical concepts contained herein are
-#  proprietary to MakinaRocks Co., Ltd. and its suppliers and may be
-#  covered by U.S. and Foreign Patents, patents in process, and
-#  are protected by trade secret or copyright law. Dissemination
-#  of this information or reproduction of this material is
-#  strictly forbidden unless prior written permission is obtained
-#  from MakinaRocks Co., Ltd.
-from datetime import datetime
-import json
-
-import torch
-import numpy as np
 
 from torch import optim
 from ignite.engine import Engine, Events
@@ -106,7 +85,7 @@ class NoveltyDetecter():
         return (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), df_test
 
 
-    def train(self, model, dset_manager, train_loader, valid_loader):
+    def train(self, model, train_loader, valid_loader):
 
         optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
@@ -212,7 +191,6 @@ def main(config):
 
     dset_manager, train_loader, valid_loader, test_loader = get_loaders(config)
     train_history, valid_history, test_history, model = detecter.train(model,
-                                                                dset_manager,
                                                                 train_loader,
                                                                 valid_loader)
     torch.save(model.state_dict(), config.saved_name)
@@ -230,14 +208,14 @@ def main(config):
 
     df_test[1:].to_csv('/data_ssd/hsr_dropobject/result_csv/'+config.saved_result+'.csv')
 
-    return (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), train_history, valid_history, test_history
+    return (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr)
 
 
 if __name__ == '__main__':
     config = get_config()
     start = time.time()
     
-    (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), _, _, _ = main(config)
+    (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), = main(config)
     end = time.time()
 
     print((end - start)/60) # min
