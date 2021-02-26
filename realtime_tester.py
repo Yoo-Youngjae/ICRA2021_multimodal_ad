@@ -19,6 +19,12 @@ import torch
 from utils.data_loaders import get_input_size
 import cv2
 
+# for show graph
+import matplotlib.pyplot as plt
+import numpy as np
+
+# use ggplot style for more sophisticated visuals
+plt.style.use('ggplot')
 
 
 _CONNECTION_TIMEOUT = 10.0
@@ -195,29 +201,45 @@ class MicController(object):
         wf.writeframes(b''.join(self.frames))
         wf.close()
 
+
+def live_plotter(x_vec, y1_data, line1, identifier='', pause_time=0.1):
+    if line1 == []:
+        # this is the call to matplotlib that allows dynamic plotting
+        plt.ion()
+        fig = plt.figure(figsize=(13, 6))
+        ax = fig.add_subplot(111)
+        # create a variable for the line so we can later update it
+        line1, = ax.plot(x_vec, y1_data, '-o', alpha=0.8)
+        # update plot label/title
+        plt.ylabel('Y Label')
+        plt.title('Title: {}'.format(identifier))
+        plt.show()
+
+    # after the figure, axis, and line are created, we only need to update the y-data
+    line1.set_ydata(y1_data)
+    # adjust limits if new data goes beyond bounds
+    if np.min(y1_data) <= line1.axes.get_ylim()[0] or np.max(y1_data) >= line1.axes.get_ylim()[1]:
+        plt.ylim([np.min(y1_data) - np.std(y1_data), np.max(y1_data) + np.std(y1_data)])
+    # this pauses the data so the figure/axis can catch up - the amount of pause can be altered above
+    plt.pause(pause_time)
+
+    # return line so we can update it again in the next iteration
+    return line1
+
 def get_config():
     import argparse
 
     p = argparse.ArgumentParser()
 
     p.add_argument('--gpu_id', type=int, default=0)
-
-    p.add_argument('--verbose', type=int, default=2)
-
     p.add_argument('--data', type=str, default='hsr_objectdrop')
-    p.add_argument('--target_class', type=str, default=1)
-
-    p.add_argument('--novelty_ratio', type=float, default=.0)
 
     p.add_argument('--btl_size', type=int, default=100) # 100
     p.add_argument('--n_layers', type=int, default=5) # 5
 
-    p.add_argument('--use_rapp', action='store_true', default=True)
     p.add_argument('--start_layer_index', type=int, default=0)
     p.add_argument('--end_layer_index', type=int, default=-1)
-    p.add_argument('--n_trials', type=int, default=1)
     p.add_argument('--from', type=str, default="youngjae")
-
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
 
@@ -225,7 +247,6 @@ def get_config():
 
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
     p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
-    p.add_argument('--saved_data', type=str, default="All")
 
     p.add_argument('--object_select_mode', action='store_true', default=False)
     p.add_argument('--object_type', type=str, default="book") # cracker doll metalcup eraser cookies book plate bottle
@@ -260,15 +281,25 @@ if __name__ == '__main__':
 
     rospy.sleep(10)
     detecter = NoveltyDetecter(config)
-    force_q = force_sensor_capture.queue
-    hand_q = vision_controller.hand_queue
-    depth_q = vision_controller.depth_queue
-    mic_q = mic_controller.queue
 
-    fusion_representation = get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q)
-    score = detecter.test(
-        model,
-        fusion_representation,
-        config
-    )
-    print(score)
+    size = 100
+    x_vec = np.linspace(0, 1, size + 1)[0:-1]
+    y_vec = np.zeros(len(x_vec))
+    line1 = []
+
+    for i in range(100):
+        force_q = force_sensor_capture.queue
+        hand_q = vision_controller.hand_queue
+        depth_q = vision_controller.depth_queue
+        mic_q = mic_controller.queue
+
+        fusion_representation = get_realtime_dataloader(config, force_q, hand_q, depth_q, mic_q)
+        score = detecter.test(
+            model,
+            fusion_representation,
+            config
+        )
+        new_val = np.array(score)
+        y_vec[-config.batch_size:] = new_val
+        line1 = live_plotter(x_vec,y_vec,line1)
+        y_vec = np.append(y_vec[config.batch_size:], [0.0 for i in range(config.batch_size)])

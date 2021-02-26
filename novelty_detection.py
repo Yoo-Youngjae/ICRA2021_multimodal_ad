@@ -167,7 +167,6 @@ def get_config():
     p.add_argument('--target_class', type=str, default=1)
 
     p.add_argument('--novelty_ratio', type=float, default=.0)
-
     p.add_argument('--btl_size', type=int, default=100) # 100, 10
     p.add_argument('--n_layers', type=int, default=5) # 5, 3
 
@@ -179,9 +178,7 @@ def get_config():
 
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
-
     p.add_argument('--models', type=str, default='ae')
-
     p.add_argument('--save_mode', action='store_true', default=False)
     p.add_argument('--all_random_mode', action='store_true', default=False)
 
@@ -189,13 +186,10 @@ def get_config():
     p.add_argument('--file_name', type=str, default="data_sum")
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
     p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
-    p.add_argument('--saved_data', type=str,
-                   default="All")
-    p.add_argument('--saved_result', type=str,
-                   default="1_26/All_sec")
+    p.add_argument('--saved_data', type=str, default="All")
+    p.add_argument('--saved_result', type=str, default="1_26/All_sec")
     p.add_argument('--object_select_mode', action='store_true', default=False)
-    p.add_argument('--train_diffs', type=str,
-                   default='datasets/All_train_diffs.pt')
+    p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')
 
     config = p.parse_args()
 
@@ -258,6 +252,7 @@ def main(config):
 
 
         dset_manager, train_loader, valid_loader, test_loader = dset_managers[csv_num], train_loaders[csv_num], valid_loaders[csv_num], test_loaders[csv_num]
+
 
 
 
