@@ -155,6 +155,10 @@ def get_config():
 
     p = argparse.ArgumentParser()
 
+    p.add_argument('--n_epochs', type=int, default=30)
+
+    p.add_argument('--batch_size', type=int, default=7000)
+    p.add_argument('--slicing_size', type=int, default=7000)
     p.add_argument('--gpu_id', type=int, default=0)
     p.add_argument('--verbose', type=int, default=2)
 
@@ -176,8 +180,6 @@ def get_config():
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
 
-    p.add_argument('--n_epochs', type=int, default=1)
-    p.add_argument('--batch_size', type=int, default=7000)
     p.add_argument('--models', type=str, default='ae')
 
     p.add_argument('--save_mode', action='store_true', default=False)

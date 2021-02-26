@@ -302,7 +302,7 @@ class TabularDataset(Dataset):
             object_dir_list = df_objectlist.to_list()
             df_datasum = df_datasum[df_datasum['data_dir'].isin(object_dir_list)]
             df_datasum.index = [i for i in range(len(df_datasum.index))]
-            df_datasum = df_datasum.loc[:config.batch_size - 1]
+            df_datasum = df_datasum.loc[:config.slicing_size - 1]
 
             df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
         elif config.all_random_mode:
@@ -321,16 +321,16 @@ class TabularDataset(Dataset):
             df_datasum = sklearn.utils.shuffle(df_datasum)
             print('before_slicing',df_datasum.shape)
             df_datasum.index = [i for i in range(len(df_datasum.index))]
-            df_datasum = df_datasum.loc[:config.batch_size - 1]
+            df_datasum = df_datasum.loc[:config.slicing_size - 1]
             print('after_slicing',df_datasum.shape)
         else:
             df_datasum = pd.read_csv(csv_data_dir)
-            df_datasum = df_datasum.loc[:config.batch_size - 1]
+            df_datasum = df_datasum.loc[:config.slicing_size - 1]
             df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
             print('after_slicing',df_datasum.shape)
 
         df_datasum.index = [i for i in range(len(df_datasum.index))]
-        df_datasum = df_datasum.loc[0:config.batch_size -1]
+        df_datasum = df_datasum.loc[0:config.slicing_size -1]
 
         depth_series = df_datasum['cur_depth_id']
         hand_series = df_datasum['cur_hand_id']
