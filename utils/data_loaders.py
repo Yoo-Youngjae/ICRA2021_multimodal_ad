@@ -695,8 +695,7 @@ def save_mfcc_from_wav(mic_q, config, length, window_size=0.1, stride=0.1):
 
     # reform [n_mfcc x length*(1/stride)] -> [length*(1/stride) x n_mfcc]
     mfcc = mfcc.T
-    mfcc = mfcc[:config.batch_size,:]
-    print('mfcc.shape', mfcc.shape)
+    mfcc = mfcc[len(mfcc)-config.batch_size:,:]
 
     return mfcc
 

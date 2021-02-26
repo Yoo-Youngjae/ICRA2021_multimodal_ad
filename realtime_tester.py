@@ -244,7 +244,7 @@ def get_config():
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
 
-    p.add_argument('--batch_size', type=int, default=36)
+    p.add_argument('--batch_size', type=int, default=10)
 
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
     p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
@@ -288,7 +288,8 @@ if __name__ == '__main__':
     y_vec = np.zeros(len(x_vec))
     line1 = []
 
-    for i in range(100):
+    for i in range(300):
+        start_time = time.time()
         force_q = force_sensor_capture.queue
         hand_q = vision_controller.hand_queue
         depth_q = vision_controller.depth_queue
@@ -305,3 +306,4 @@ if __name__ == '__main__':
         y_vec[-config.batch_size:] = new_val
         line1 = live_plotter(x_vec,y_vec,line1)
         y_vec = np.append(y_vec[config.batch_size:], [0.0 for i in range(config.batch_size)])
+        print(time.time() - start_time)
