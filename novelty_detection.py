@@ -39,8 +39,7 @@ class NoveltyDetecter():
              train_loader,
              valid_loader,
              test_loader,
-             df_test,
-             use_rapp=False):
+             df_test):
         from reconstruction_aggregation import get_diffs
 
         model.eval()
@@ -55,7 +54,7 @@ class NoveltyDetecter():
             else:
                 _test_y = np.where(np.isin(_test_y, [self.config.target_class]), True, False)
 
-            train_diff_on_layers = get_diffs(_train_x, model)
+            train_diff_on_layers = get_diffs(_train_x, model, batch_size=config.batch_size)
             valid_diff_on_layers = get_diffs(_valid_x, model)
             test_diff_on_layers = get_diffs(_test_x, model)
 
@@ -107,7 +106,7 @@ class NoveltyDetecter():
         return (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), df_test
 
 
-    def train(self, model, dset_manager, train_loader, valid_loader, test_loader, test_every_epoch=False):
+    def train(self, model, dset_manager, train_loader, valid_loader):
 
         optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
@@ -155,10 +154,10 @@ def get_config():
 
     p = argparse.ArgumentParser()
 
-    p.add_argument('--n_epochs', type=int, default=30)
+    p.add_argument('--n_epochs', type=int, default=20)
 
     p.add_argument('--batch_size', type=int, default=7000)
-    p.add_argument('--slicing_size', type=int, default=7000)
+    p.add_argument('--slicing_size', type=int, default=56000)
     p.add_argument('--gpu_id', type=int, default=0)
     p.add_argument('--verbose', type=int, default=2)
 
@@ -170,20 +169,17 @@ def get_config():
     p.add_argument('--btl_size', type=int, default=100) # 100, 10
     p.add_argument('--n_layers', type=int, default=5) # 5, 3
 
-    p.add_argument('--use_rapp', action='store_true', default=True)
     p.add_argument('--start_layer_index', type=int, default=0)
     p.add_argument('--end_layer_index', type=int, default=-1)
-    p.add_argument('--n_trials', type=int, default=1)
     p.add_argument('--from', type=str, default="youngjae")
 
 
     p.add_argument('--folder_name', type=str, default="hsr_objectdrop/")
     p.add_argument('--models', type=str, default='ae')
     p.add_argument('--save_mode', action='store_true', default=False)
-    p.add_argument('--all_random_mode', action='store_true', default=False)
 
-
-    p.add_argument('--file_name', type=str, default="data_sum")
+    p.add_argument('--data_folder_name', type=str, default="/data_ssd/hsr_dropobject/")
+    p.add_argument('--file_name', type=str, default="data_sum") # data_sum_motion, data_sum_free
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
     p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
     p.add_argument('--saved_data', type=str, default="All")
@@ -192,6 +188,9 @@ def get_config():
     p.add_argument('--train_diffs', type=str, default='datasets/All_train_diffs.pt')
 
     config = p.parse_args()
+
+    if config.file_name is not 'data_sum':
+        config.slicing_size = 7000
 
     return config
 
@@ -210,61 +209,24 @@ def main(config):
 
     if config.verbose >= 2:
         print(model)
-    dset_managers, train_loaders, valid_loaders, test_loaders = [], [], [], []
-    df_test = pd.DataFrame(
-        [{'base_auroc': 0, 'sap_auroc': 0, 'nap_auroc': 0, 'base_f1score': 0, 'sap_f1score': 0, 'nap_f1score': 0}])
-    for i in range(config.n_epochs):
-        if config.file_name == 'data_sum_free' or config.file_name == 'data_sum_motion':
-            csv_num = 0  # i%8
-        else:
-            csv_num = i % 8
-        dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, csv_num)
-        train_history, valid_history, test_history, model = detecter.train(model,
-                                                                    dset_manager,
-                                                                    train_loader,
-                                                                    valid_loader,
-                                                                    test_loader,
-                                                                    test_every_epoch=not config.use_rapp
-                                                                    )
-        dset_managers.append(dset_manager)
-        train_loaders.append(train_loader)
-        valid_loaders.append(valid_loader)
-        test_loaders.append(test_loader)
-        (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), df_test = detecter.test(
-            model,
-            dset_manager,
-            train_loader,
-            valid_loader,
-            test_loader,
-            df_test,
-            use_rapp=config.use_rapp,
-        )
 
+    dset_manager, train_loader, valid_loader, test_loader = get_loaders(config)
+    train_history, valid_history, test_history, model = detecter.train(model,
+                                                                dset_manager,
+                                                                train_loader,
+                                                                valid_loader)
     torch.save(model.state_dict(), config.saved_name)
 
     # testModel
     df_test = pd.DataFrame([{'base_auroc': 0, 'sap_auroc': 0, 'nap_auroc': 0, 'base_f1score':0, 'sap_f1score':0, 'nap_f1score': 0}])
-    for i in range(config.n_epochs): # 30
-        if config.file_name == 'data_sum_free' or config.file_name == 'data_sum_motion':
-            csv_num = 0  # i%8
-        else:
-            csv_num = i % 8
 
-
-        dset_manager, train_loader, valid_loader, test_loader = dset_managers[csv_num], train_loaders[csv_num], valid_loaders[csv_num], test_loaders[csv_num]
-
-
-
-
-        (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), df_test = detecter.test(
-            model,
-            dset_manager,
-            train_loader,
-            valid_loader,
-            test_loader,
-            df_test,
-            use_rapp=config.use_rapp,
-        )
+    (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr), df_test = detecter.test(
+        model,
+        dset_manager,
+        train_loader,
+        valid_loader,
+        test_loader,
+        df_test)
 
     df_test[1:].to_csv('/data_ssd/hsr_dropobject/result_csv/'+config.saved_result+'.csv')
 
@@ -280,6 +242,6 @@ if __name__ == '__main__':
 
     print((end - start)/60) # min
     print('BASE AUROC: %.4f AUPR: %.4f' % (base_auroc, base_aupr))
-    if config.use_rapp:
-        print('RaPP SAP AUROC: %.4f AUPR: %.4f' % (sap_auroc, sap_aupr))
-        print('RaPP NAP AUROC: %.4f AUPR: %.4f' % (nap_auroc, nap_aupr))
+
+    print('RaPP SAP AUROC: %.4f AUPR: %.4f' % (sap_auroc, sap_aupr))
+    print('RaPP NAP AUROC: %.4f AUPR: %.4f' % (nap_auroc, nap_aupr))

@@ -16,7 +16,7 @@
 #  from MakinaRocks Co., Ltd.
 
 
-import os
+
 import torch
 import numpy as np
 from collections import Iterable
@@ -67,7 +67,7 @@ def get_balance(seen_index_list, unseen_index_list, novelty_ratio=.5):
     else:
         return seen_index_list, unseen_index_list
 
-def get_loaders(config, csv_num, use_full_class=False):
+def get_loaders(config, use_full_class=False):
     # get hsr_objectdrop config for Tabular dataset
     import json
     with open('datasets/data_config.json', 'r') as f:
@@ -102,12 +102,10 @@ def get_loaders(config, csv_num, use_full_class=False):
                 unseen_labels += [i]
 
     if data_config['from'] in ['youngjae']:
-        from sklearn.preprocessing import StandardScaler
+
         dset_manager = TabularDatasetManager(
-            dataset_name=config.data,
-            config=config,
-            csv_num = csv_num
-            # transform=StandardScaler(),
+            config=config
+
         )
 
     # balance ratio of loaders
@@ -181,7 +179,7 @@ class HSR_Net(nn.Module):
         self.conv1d = nn.Conv2d( 1,  8, kernel_size=2, stride=2)
         self.conv2d = nn.Conv2d( 8,  8, kernel_size=3, stride=1, padding=1)
         self.conv3d = nn.Conv2d( 8,  8, kernel_size=2, stride=2)
-        self.batch_size = config.batch_size
+        self.batch_size = config.slicing_size
         self.config = config
 
 
@@ -253,12 +251,12 @@ class HSR_Net(nn.Module):
 
 
 class TabularDataset(Dataset):
-    def __init__(self, file_dir, config, csv_num, skip_header=0, transform=None, delimiter=None, target_transform=None, full_test=None):
+    def __init__(self, config, transform=None, target_transform=None):
         All = False
         hand_camera = False
         force_torque = False
         head_depth = False
-        LiDAR = False
+
         mic = False
         unimodal = True
 
@@ -272,65 +270,44 @@ class TabularDataset(Dataset):
             force_torque = True
         elif config.sensor == 'head_depth':
             head_depth = True
-        elif config.sensor == 'LiDAR':
-            LiDAR = True
         elif config.sensor == 'mic':
             mic = True
 
 
-        file_name = config.saved_data
+
         data_sum_file = config.file_name
-        csv_data_dir = '/data_ssd/hsr_dropobject/'+data_sum_file+str(csv_num)+'.csv'
-
-
-
-        if full_test is not None:
-            df_datasum = pd.read_csv(full_test)
+        if data_sum_file is not 'data_sum':
+            df_datasum = pd.read_csv(config.data_folder_name+data_sum_file+'0.csv')
         elif config.object_select_mode:
-            df_datasum = pd.read_csv('/data_ssd/hsr_dropobject/data_sum0.csv')
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum1.csv'), ignore_index=True)
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum2.csv'), ignore_index=True)
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum3.csv'), ignore_index=True)
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum4.csv'), ignore_index=True)
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum5.csv'), ignore_index=True)
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum6.csv'), ignore_index=True)
-            df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/data_sum7.csv'), ignore_index=True)
-            #
-            df_objectlist = pd.read_csv('/data_ssd/hsr_dropobject/objectsplit.csv')
+            df_datasum = pd.read_csv(config.data_folder_name+data_sum_file+'0.csv')
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'1.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'2.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'3.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'4.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'5.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'6.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'7.csv'), ignore_index=True)
+            df_objectlist = pd.read_csv(config.data_folder_name+'objectsplit.csv')
             print(config.object_type)
             df_objectlist = df_objectlist[config.object_type]           # book only mode !!! # cracker doll metalcup eraser cookies book plate bottle
             object_dir_list = df_objectlist.to_list()
             df_datasum = df_datasum[df_datasum['data_dir'].isin(object_dir_list)]
             df_datasum.index = [i for i in range(len(df_datasum.index))]
             df_datasum = df_datasum.loc[:config.slicing_size - 1]
-
             df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
-        elif config.all_random_mode:
-            if os.path.exists('/data_ssd/hsr_dropobject/datasum_total.pt'):
-                df_datasum = torch.load('/data_ssd/hsr_dropobject/datasum_total.pt')
-            else:
-                df_datasum = pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'0.csv')
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'1.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'2.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'3.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'4.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'5.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'6.csv'), ignore_index=True)
-                df_datasum = df_datasum.append(pd.read_csv('/data_ssd/hsr_dropobject/'+data_sum_file+'7.csv'), ignore_index=True)
-                torch.save(df_datasum, '/data_ssd/hsr_dropobject/datasum_total.pt')
+        else:
+            df_datasum = pd.read_csv(config.data_folder_name+data_sum_file+'0.csv')
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'1.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'2.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'3.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'4.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'5.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'6.csv'), ignore_index=True)
+            df_datasum = df_datasum.append(pd.read_csv(config.data_folder_name+data_sum_file+'7.csv'), ignore_index=True)
+
             df_datasum = sklearn.utils.shuffle(df_datasum)
-            print('before_slicing',df_datasum.shape)
             df_datasum.index = [i for i in range(len(df_datasum.index))]
             df_datasum = df_datasum.loc[:config.slicing_size - 1]
-            print('after_slicing',df_datasum.shape)
-        else:
-            df_datasum = pd.read_csv(csv_data_dir)
-            df_datasum = df_datasum.loc[:config.slicing_size - 1]
-            df_datasum = sklearn.utils.shuffle(df_datasum)  # shuffle
-            print('after_slicing',df_datasum.shape)
-
-        df_datasum.index = [i for i in range(len(df_datasum.index))]
-        df_datasum = df_datasum.loc[0:config.slicing_size -1]
 
         depth_series = df_datasum['cur_depth_id']
         hand_series = df_datasum['cur_hand_id']
@@ -344,9 +321,6 @@ class TabularDataset(Dataset):
         data = data.drop(columns=['label'])
         data = data.drop(columns=['id'])
         data = data.loc[:, ~data.columns.str.match('Unnamed')]
-
-
-
 
         if All:
             for i in range(963):
@@ -412,8 +386,7 @@ class TabularDataset(Dataset):
                     if head_depth or All:
                         base_depth_arr = np.concatenate((base_depth_arr, depth_arr), axis=0)
 
-        #todo delete
-        multisensory_start_time = time.time()
+
         if hand_camera or All:
             r = self.norm_vec_np(base_hand_arr)
             r = torch.from_numpy(r.astype(np.float32))
@@ -464,11 +437,6 @@ class TabularDataset(Dataset):
             data = hsr_net(None, d, None, None, None)
             print(data.shape)
             data = data.view(-1, 512)
-        if LiDAR:
-            hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
-            data = hsr_net(None, None, l, None, None)
-            print(data.shape)
-            data = data.view(-1, 2048)
         if mic:
             hsr_net = HSR_Net(unimodal, config).cuda(config.gpu_id)
             data = hsr_net(None, None, None, None, m)
@@ -476,9 +444,7 @@ class TabularDataset(Dataset):
             data = data.view(-1, 128)
 
 
-        # todo deleted
-        print('multisensory_time',time.time() - multisensory_start_time)
-        # data = self.norm_vec(data)
+
         self.transform = transform
         self.target_transform = target_transform
 
@@ -517,14 +483,13 @@ class TabularDataset(Dataset):
 
 class TabularDatasetManager:
     
-    def __init__(self, dataset_name, config, csv_num,
-        transform=None, target_transform=None,
-        shuffle=False, data_size=0, full_test=None):
+    def __init__(self, config, transform=None, target_transform=None,
+        shuffle=False, data_size=0):
 
         data_list = []
         targets_list = []
 
-        self.train_dataset = self._get_dataset(config=config, csv_num=csv_num, full_test=full_test)
+        self.train_dataset = self._get_dataset(config=config)
         if self.train_dataset:
             data, targets = self.train_dataset.data, self.train_dataset.targets
             data_list.append(data)
@@ -552,17 +517,9 @@ class TabularDatasetManager:
         self.train_dataset.transform = transform
         self.train_dataset.target_transform = target_transform
         
-    def _get_dataset(
-        self,
-        config,
-        csv_num,
-        root='/data_ssd/hsr_dropobject/data',
-        full_test=None
-    ):
+    def _get_dataset(self, config):
 
-
-        load_dir = root
-        dataset = TabularDataset(load_dir, config, csv_num, skip_header=1, delimiter=',',full_test=full_test)
+        dataset = TabularDataset(config)
 
         return dataset
 
