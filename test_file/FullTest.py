@@ -143,7 +143,7 @@ class NoveltyDetecter():
 
 def get_loaders(config, dir_name):
     import json
-    with open('datasets/data_config.json', 'r') as f:
+    with open('../datasets/data_config.json', 'r') as f:
         data_config = json.load(f)
         data_config = data_config[config.data]
 
@@ -258,7 +258,7 @@ def main(config):
 
 
 
-    dir_name = 'datasets/caltime_test.csv'
+    dir_name = '../datasets/caltime_test.csv'
     df = pd.read_csv(dir_name)
     config.batch_size = len(df)
     dset_manager, train_loader, valid_loader, test_loader = get_loaders(config, dir_name)

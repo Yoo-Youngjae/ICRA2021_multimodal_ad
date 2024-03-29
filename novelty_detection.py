@@ -160,7 +160,7 @@ def get_config():
     p.add_argument('--data_folder_name', type=str, default="/data_ssd/hsr_dropobject/")
     p.add_argument('--file_name', type=str, default="data_sum") # data_sum data_sum_motion, data_sum_free
     p.add_argument('--sensor', type=str, default="All")  # All hand_camera force_torque head_depth mic LiDAR
-    p.add_argument('--saved_name', type=str, default="datasets/All_100.pt")
+    p.add_argument('--saved_name', type=str, default="datasets/All.pt")
     p.add_argument('--saved_data', type=str, default="All")
     p.add_argument('--saved_result', type=str, default="1_26/All_sec")
     p.add_argument('--object_select_mode', action='store_true', default=False)
@@ -206,7 +206,7 @@ def main(config):
         test_loader,
         df_test)
 
-    # df_test[1:].to_csv('/data_ssd/hsr_dropobject/result_csv/'+config.saved_result+'.csv')
+    df_test[1:].to_csv(config.data+'/result_csv/'+config.saved_result+'.csv')
 
     return (base_auroc, base_aupr), (sap_auroc, sap_aupr), (nap_auroc, nap_aupr)
 

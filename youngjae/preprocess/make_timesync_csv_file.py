@@ -1,12 +1,10 @@
 import pandas as pd
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
 
-df_rgb = pd.read_csv('/home/yjyoo/PycharmProjects/Rapp/youngjae/data/rgb.csv')[1:]
-df_depth = pd.read_csv('/home/yjyoo/PycharmProjects/Rapp/youngjae/data/depth.csv')[1:]
-df_LiDAR = pd.read_csv('/home/yjyoo/PycharmProjects/Rapp/youngjae/data/LiDAR.csv')[1:]
-df_hand_weight = pd.read_csv('/home/yjyoo/PycharmProjects/Rapp/youngjae/data/hand_weight.csv')[1:]
+
+df_rgb = pd.read_csv('~/youngjae/data/rgb.csv')[1:]
+df_depth = pd.read_csv('~/data/depth.csv')[1:]
+df_LiDAR = pd.read_csv('~/LiDAR.csv')[1:]
+df_hand_weight = pd.read_csv('~/youngjae/data/hand_weight.csv')[1:]
 
 depth_id = 0
 LiDAR_id = 0
