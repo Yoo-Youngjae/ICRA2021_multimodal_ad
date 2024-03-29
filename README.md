@@ -1,4 +1,5 @@
 # Multimodal Anomaly Detection (ICRA 2021)
+![architecture](https://github.com/Yoo-Youngjae/ICRA2021_multimodal_ad/assets/44061214/500e82f9-f0ba-44dc-a1c2-59f75bfdd0d6)
 
 ## Introduction
 We presented "Multimodal Anomaly Detection based on Deep Auto-Encoder for Object Slip Perception of Mobile Manipulation Robots" in ICRA 2021.
